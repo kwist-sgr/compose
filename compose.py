@@ -4,10 +4,6 @@ from itertools import imap, ifilter
 from operator import itemgetter, attrgetter, rshift
 
 
-def _apply(arg, f):
-    return f(arg)
-
-
 class Compose(object):
 
     def __init__(self, f, g):
@@ -26,14 +22,15 @@ class Compose(object):
             self.stack.append(other)
         return self
 
-    def __call__(self, arg, apply=_apply):
-        return reduce(apply, self.stack, arg)
+    def __call__(self, arg):
+        return reduce(lambda arg, f: f(arg), self.stack, arg)
 
 
 class C(object):
 
     def __init__(self, func):
         self.func = func
+        self.__doc__ = func.__doc__
 
     def __repr__(self):
         return self.__name__
@@ -83,8 +80,8 @@ class P(C):
     NAME_ID = 'partial'
 
     def __init__(self, func, *args, **kwargs):
-        self.func_name = func.__name__
         super(P, self).__init__(partial(func, *args, **kwargs))
+        self.func_name = func.__name__
 
     @property
     def __name__(self):
@@ -92,21 +89,23 @@ class P(C):
 
 
 class ItertoolsPartial(P):
-    CALLABLE = None
+    f = None
+
+    @property
+    def NAME_ID(self):
+        return self.f.__name__
 
     def __init__(self, func):
-        super(ItertoolsPartial, self).__init__(self.CALLABLE, func)
+        super(ItertoolsPartial, self).__init__(self.f, func)
         self.func_name = func.__name__
 
 
 class Map(ItertoolsPartial):
-    NAME_ID = 'map'
-    CALLABLE = imap
+    f = imap
 
 
 class Filter(ItertoolsPartial):
-    NAME_ID = 'filter'
-    CALLABLE = ifilter
+    f = ifilter
 
 
 Int = C(int)
