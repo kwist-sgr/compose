@@ -1,7 +1,20 @@
 # coding: utf-8
-from functools import partial
+from functools import partial, wraps
 from itertools import imap, ifilter
-from operator import itemgetter, attrgetter, rshift
+from operator import itemgetter, attrgetter, lshift, methodcaller
+
+
+def flip(func):
+
+    @wraps(func)
+    def wrapper(a, b):
+        return func(b, a)
+
+    return wrapper
+
+
+def apply(func, arg):
+    return func(arg)
 
 
 class Compose(object):
@@ -15,15 +28,15 @@ class Compose(object):
             ','.join(imap(attrgetter('__name__'), self.stack))
         )
 
-    def __rshift__(self, other):
+    def __lshift__(self, other):
         if isinstance(other, self.__class__):
             self.stack.extend(other.stack)
         else:
             self.stack.append(other)
         return self
 
-    def __call__(self, arg):
-        return reduce(lambda arg, f: f(arg), self.stack, arg)
+    def __call__(self, arg, f=flip(apply)):
+        return reduce(f, reversed(self.stack), arg)
 
 
 class C(object):
@@ -39,8 +52,8 @@ class C(object):
     def __name__(self):
         return self.func.__name__
 
-    def __rshift__(self, other):
-        """ >> operator """
+    def __lshift__(self, other):
+        """ << operator """
         return Compose(self, other)
 
     def __call__(self, arg):
@@ -71,7 +84,7 @@ class IG(BaseGetter):
         if len(args) == 1 and isinstance(args[0], basestring):
             names = args[0].split('.')
             if len(names) > 1:
-                return reduce(rshift, imap(cls, names))
+                return reduce(lshift, imap(cls, names))
         # itemgetter(0), itemgetter(1, 2), itemgetter('item', 'date')
         return super(IG, cls).__new__(cls, *args)
 
@@ -91,13 +104,13 @@ class P(C):
 class IterCompose(P):
     f = None
 
-    @property
-    def NAME_ID(self):
-        return self.f.__name__
-
     def __init__(self, func):
         super(IterCompose, self).__init__(self.f, func)
         self.func_name = func.__name__
+
+    @property
+    def NAME_ID(self):
+        return self.f.__name__
 
 
 class Map(IterCompose):
