@@ -88,7 +88,7 @@ class P(C):
         return "{}({})".format(self.NAME_ID, self.func_name)
 
 
-class ItertoolsPartial(P):
+class IterCompose(P):
     f = None
 
     @property
@@ -96,15 +96,15 @@ class ItertoolsPartial(P):
         return self.f.__name__
 
     def __init__(self, func):
-        super(ItertoolsPartial, self).__init__(self.f, func)
+        super(IterCompose, self).__init__(self.f, func)
         self.func_name = func.__name__
 
 
-class Map(ItertoolsPartial):
+class Map(IterCompose):
     f = imap
 
 
-class Filter(ItertoolsPartial):
+class Filter(IterCompose):
     f = ifilter
 
 
