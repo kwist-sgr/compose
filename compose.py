@@ -1,13 +1,10 @@
 # coding: utf-8
-from itertools import imap
 from functools import partial
+from itertools import imap, ifilter
 from operator import itemgetter, attrgetter, rshift
 
 
-__all__ = ['C', 'Int', 'Str', 'IG', 'AG', 'P']
-
-
-def apply(arg, f):
+def _apply(arg, f):
     return f(arg)
 
 
@@ -29,7 +26,7 @@ class Compose(object):
             self.stack.append(other)
         return self
 
-    def __call__(self, arg):
+    def __call__(self, arg, apply=_apply):
         return reduce(apply, self.stack, arg)
 
 
@@ -83,70 +80,36 @@ class IG(BaseGetter):
 
 
 class P(C):
+    NAME_ID = 'partial'
 
     def __init__(self, func, *args, **kwargs):
+        self.func_name = func.__name__
         super(P, self).__init__(partial(func, *args, **kwargs))
 
     @property
     def __name__(self):
-        return "partial({})".format(self.func.func.__name__)
+        return "{}({})".format(self.NAME_ID, self.func_name)
+
+
+class ItertoolsPartial(P):
+    CALLABLE = None
+
+    def __init__(self, func):
+        super(ItertoolsPartial, self).__init__(self.CALLABLE, func)
+        self.func_name = func.__name__
+
+
+class Map(ItertoolsPartial):
+    NAME_ID = 'map'
+    CALLABLE = imap
+
+
+class Filter(ItertoolsPartial):
+    NAME_ID = 'filter'
+    CALLABLE = ifilter
 
 
 Int = C(int)
 Str = C(str)
-
-
-"""
-
-# f = lambda x: int(x['id'])
-In : f = IG('id') >> Int
-In : f({'id': '75', 'test': True})
-Out: 75
-
-# f = lambda x: list(str(int(x['id'])))
-In : f = IG('id') >> Int >> Str >> C(list)
-In : f({'id': '75', 'test': True})
-Out: ['7', '5']
-
-# f = lambda x: max(7, int(x['id]))
-In : f = IG('id') >> Int >> P(max, 7)
-In : f({'id': '75', 'test': True})
-Out: 75
-In : f({'id': '5', 'test': True})
-Out: 7
-
-# f = lambda x: list(str(max, 777, int(x['id'])))
-In : f = IG('id') >> Int >> P(max, 777) >> Str >> C(list)
-In : f
-Out: <Compose [itemgetter('id'),int,partial('max'),str,list]>
-
-In : f({'id': '75', 'test': True})
-Out: ['7', '7', '7']
-
-In : f({'id': '1275', 'test': True})
-Out: ['1', '2', '7', '5']
-
-# f = lambda x: int(x['item']['id'])
-In : f = IG('item.id') >> Int
-In : f
-Out: <Compose [itemgetter('item'),itemgetter('id'),int]>
-In : f({'item': {'id': '742', 'flag': 7}})
-Out: 742
-
-# f = lambda x: list(str(max(721, int(x['item']['id']))))
-In : f = IG('item.id') >> Int >> P(max, 721) >> Str >> C(list)
-In : f
-Out: <Compose [itemgetter('item'),itemgetter('id'),int,partial('max'),str,list]>
-
-In : f({'item': {'id': '742', 'flag': 7}})
-Out: ['7', '4', '2']
-
-# f = lambda x: list(str(int(x['item']['id'][1])))
-In : f = IG('item.id') >> IG(1) >> Int >> Str >> C(list)
-In : f
-Out: <Compose [itemgetter(item),itemgetter(id),itemgetter(1),int,str,list]>
-
-In : f({'item': {'id': ['742', '15', '98'], 'flag': 7}})
-Out: ['1', '5']
-
-"""
+Set = C(set)
+List = C(list)

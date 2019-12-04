@@ -62,3 +62,25 @@ Out: <Compose [itemgetter(item),itemgetter(id),itemgetter(1),int,str,list]>
 In : f({'item': {'id': ['742', '15', '98'], 'flag': 7}})
 Out: ['1', '5']
 ```
+
+```python
+# f = lambda x: list(imap(int, x))
+In : f = Map(int) >> List
+In : f
+Out: <Compose [map(int),list]>
+
+In : f(['4', '7'])
+Out: [4, 7]
+```
+
+```python
+def _missing_periods(missing):
+    return {x[0] for x in missing}
+
+In : f = Map(IG(0)) >> Set
+In : f
+Out: <Compose [map(itemgetter(0)),set]>
+
+In : f([(1, '1'), (50, '05'), (11, '21'), (50, '50')])
+Out: set([1, 50, 11])
+```
