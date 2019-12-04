@@ -84,7 +84,7 @@ class IG(BaseGetter):
         if len(args) == 1 and isinstance(args[0], basestring):
             names = args[0].split('.')
             if len(names) > 1:
-                return reduce(lshift, imap(cls, names))
+                return reduce(lshift, imap(cls, reversed(names)))
         # itemgetter(0), itemgetter(1, 2), itemgetter('item', 'date')
         return super(IG, cls).__new__(cls, *args)
 
