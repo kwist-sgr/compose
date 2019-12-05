@@ -35,6 +35,7 @@ class Compose(object):
         return ['__call__', '__class__']
 
     def __lshift__(self, other):
+        """ << operator """
         return self.__class__(self, other)
 
     def __call__(self, arg, f=flip(apply)):
