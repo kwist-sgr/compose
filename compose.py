@@ -21,7 +21,9 @@ class Compose(object):
     __slots__ = ['stack']
 
     def __init__(self, f, g):
-        self.stack = [f, g]
+        f = f.stack if isinstance(f, self.__class__) else [f]
+        g = g.stack if isinstance(g, self.__class__) else [g]
+        self.stack = f + g
 
     def __repr__(self):
         return "<{} [{}]>".format(
@@ -33,11 +35,7 @@ class Compose(object):
         return ['__call__', '__class__']
 
     def __lshift__(self, other):
-        if isinstance(other, self.__class__):
-            self.stack.extend(other.stack)
-        else:
-            self.stack.append(other)
-        return self
+        return self.__class__(self, other)
 
     def __call__(self, arg, f=flip(apply)):
         return reduce(f, reversed(self.stack), arg)
@@ -62,9 +60,6 @@ class C(object):
 
     def __lshift__(self, other):
         """ << operator """
-        if isinstance(other, Compose):
-            other.stack.insert(0, self)
-            return other
         return Compose(self, other)
 
     def __call__(self, arg):
