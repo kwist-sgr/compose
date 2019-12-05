@@ -1,7 +1,7 @@
 # coding: utf-8
 from functools import partial, wraps
 from itertools import imap, ifilter
-from operator import itemgetter, attrgetter, lshift, methodcaller
+from operator import itemgetter, attrgetter, lshift
 
 
 def flip(func):
@@ -54,6 +54,9 @@ class C(object):
 
     def __lshift__(self, other):
         """ << operator """
+        if isinstance(other, Compose):
+            other.stack.insert(0, self)
+            return other
         return Compose(self, other)
 
     def __call__(self, arg):
@@ -64,12 +67,12 @@ class BaseGetter(C):
     getter = None
 
     def __init__(self, *args):
-        self.args = args
         super(BaseGetter, self).__init__(self.getter(*args))
+        self.args = ','.join(imap(str, args))
 
     @property
     def __name__(self):
-        return "{}({})".format(self.func.__class__.__name__, ','.join(imap(str, self.args)))
+        return "{}({})".format(self.func.__class__.__name__, self.args)
 
 
 class AG(BaseGetter):
@@ -94,11 +97,14 @@ class P(C):
 
     def __init__(self, func, *args, **kwargs):
         super(P, self).__init__(partial(func, *args, **kwargs))
-        self.func_name = func.__name__
 
     @property
     def __name__(self):
         return "{}({})".format(self.NAME_ID, self.func_name)
+
+    @property
+    def func_name(self):
+        return self.func.func.__name__
 
 
 class IterCompose(P):
@@ -106,11 +112,14 @@ class IterCompose(P):
 
     def __init__(self, func):
         super(IterCompose, self).__init__(self.f, func)
-        self.func_name = func.__name__
 
     @property
     def NAME_ID(self):
         return self.f.__name__
+
+    @property
+    def func_name(self):
+        return self.func.args[0].__name__
 
 
 class Map(IterCompose):
@@ -125,3 +134,5 @@ Int = C(int)
 Str = C(str)
 Set = C(set)
 List = C(list)
+
+Sum = C(sum)

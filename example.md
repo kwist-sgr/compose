@@ -1,20 +1,20 @@
 ```python
 # f = lambda x: int(x['id'])
-In : f = IG('id') >> Int
+In : f = Int << IG('id')
 In : f({'id': '75', 'test': True})
 Out: 75
 ```
 
 ```python
 # f = lambda x: list(str(int(x['id'])))
-In : f = IG('id') >> Int >> Str >> C(list)
+In : f = List << Str << Int << IG('id')
 In : f({'id': '75', 'test': True})
 Out: ['7', '5']
 ```
 
 ```python
 # f = lambda x: max(7, int(x['id]))
-In : f = IG('id') >> Int >> P(max, 7)
+In : f = P(max, 7) << Int << IG('id')
 In : f({'id': '75', 'test': True})
 Out: 75
 In : f({'id': '5', 'test': True})
@@ -23,9 +23,9 @@ Out: 7
 
 ```python
 # f = lambda x: list(str(max, 777, int(x['id'])))
-In : f = IG('id') >> Int >> P(max, 777) >> Str >> C(list)
+In : f = List << Str << P(max, 777) << Int << IG('id')
 In : f
-Out: <Compose [itemgetter('id'),int,partial('max'),str,list]>
+Out: <Compose [list,str,partial(max),int,itemgetter(id)]>
 
 In : f({'id': '75', 'test': True})
 Out: ['7', '7', '7']
@@ -36,18 +36,19 @@ Out: ['1', '2', '7', '5']
 
 ```python
 # f = lambda x: int(x['item']['id'])
-In : f = IG('item.id') >> Int
+In : f = Int << IG('item.id')
 In : f
-Out: <Compose [itemgetter('item'),itemgetter('id'),int]>
+Out: <Compose [int,itemgetter(id),itemgetter(item)]>
+
 In : f({'item': {'id': '742', 'flag': 7}})
 Out: 742
 ```
 
 ```python
 # f = lambda x: list(str(max(721, int(x['item']['id']))))
-In : f = IG('item.id') >> Int >> P(max, 721) >> Str >> C(list)
+In : f = List << Str << P(max, 721) << Int << IG('item.id')
 In : f
-Out: <Compose [itemgetter('item'),itemgetter('id'),int,partial('max'),str,list]>
+Out: <Compose [list,str,partial(max),int,itemgetter(id),itemgetter(item)]>
 
 In : f({'item': {'id': '742', 'flag': 7}})
 Out: ['7', '4', '2']
@@ -55,9 +56,9 @@ Out: ['7', '4', '2']
 
 ```python
 # f = lambda x: list(str(int(x['item']['id'][1])))
-In : f = IG('item.id') >> IG(1) >> Int >> Str >> C(list)
+In : f = List << Str << Int << IG(1) << IG('item.id')
 In : f
-Out: <Compose [itemgetter(item),itemgetter(id),itemgetter(1),int,str,list]>
+Out: <Compose [list,str,int,itemgetter(1),itemgetter(id),itemgetter(item)]>
 
 In : f({'item': {'id': ['742', '15', '98'], 'flag': 7}})
 Out: ['1', '5']
@@ -65,22 +66,37 @@ Out: ['1', '5']
 
 ```python
 # f = lambda x: list(imap(int, x))
-In : f = Map(int) >> List
+In : f = List << Map(int)
 In : f
-Out: <Compose [map(int),list]>
+Out: <Compose [list,imap(int)]>
 
 In : f(['4', '7'])
 Out: [4, 7]
+
+In : f = Sum << Map(int)
+In : f
+Out: <Compose [sum,imap(int)]>
+
+In : f(['4', '7'])
+Out: 11
 ```
 
 ```python
-def _missing_periods(missing):
-    return {x[0] for x in missing}
-
-In : f = Map(IG(0)) >> Set
+# f = lambda m: {x[0] for x in m}
+In : f = Set << Map(IG(0))
 In : f
-Out: <Compose [map(itemgetter(0)),set]>
+Out: <Compose [set,imap(itemgetter(0))]>
 
 In : f([(1, '1'), (50, '05'), (11, '21'), (50, '50')])
 Out: set([1, 50, 11])
+```
+
+```python
+# f = lambda x: sum(imap(int, list(str(max(721, int(x['item']['id']))))))
+In : f = Sum << Map(int) << List << Str << P(max, 721) << Int << IG('item.id')
+In : f
+Out: <Compose [sum,imap(int),list,str,partial(max),int,itemgetter(id),itemgetter(item)]>
+
+In : f({'item': {'id': '742', 'flag': 7}})
+Out: 13
 ```
