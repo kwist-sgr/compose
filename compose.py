@@ -18,6 +18,7 @@ def apply(func, arg):
 
 
 class Compose(object):
+    __slots__ = ['stack']
 
     def __init__(self, f, g):
         self.stack = [f, g]
@@ -27,6 +28,9 @@ class Compose(object):
             self.__class__.__name__,
             ','.join(imap(attrgetter('__name__'), self.stack))
         )
+
+    def __dir__(self):
+        return ['__call__', '__class__']
 
     def __lshift__(self, other):
         if isinstance(other, self.__class__):
@@ -40,6 +44,7 @@ class Compose(object):
 
 
 class C(object):
+    __slots__ = ['func', '__doc__']
 
     def __init__(self, func):
         self.func = func
@@ -47,6 +52,9 @@ class C(object):
 
     def __repr__(self):
         return self.__name__
+
+    def __dir__(self):
+        return ['__call__', '__name__', '__doc__', '__class__']
 
     @property
     def __name__(self):
@@ -64,6 +72,7 @@ class C(object):
 
 
 class BaseGetter(C):
+    __slots__ = ['func', '__doc__', 'args']
     getter = None
 
     def __init__(self, *args):
