@@ -1,7 +1,10 @@
 # coding: utf-8
 from functools import partial, wraps
-from itertools import imap, ifilter
 from operator import itemgetter, attrgetter, or_
+try:
+    from itertools import imap as map, ifilter as filter
+except ImportError:
+    pass
 
 
 def flip(func):
@@ -28,23 +31,15 @@ class Compose(object):
     def __repr__(self):
         return "<{} [{}]>".format(
             self.__class__.__name__,
-            ','.join(imap(attrgetter('__name__'), self.stack))
+            ','.join(map(attrgetter('__name__'), self.stack))
         )
 
     def __dir__(self):
         return ['__call__', '__class__']
 
-    def __or__(self, other):
-        """ | operator """
+    def __lshift__(self, other):
+        """ << operator """
         return self.__class__(self, other)
-
-    def __ior__(self, other):
-        """ |= operator """
-        if isinstance(other, self.__class__):
-            self.stack.extend(other.stack)
-        else:
-            self.stack.append(other)
-        return self
 
     def __call__(self, arg, f=flip(apply)):
         return reduce(f, reversed(self.stack), arg)
@@ -67,8 +62,8 @@ class C(object):
     def __name__(self):
         return self.func.__name__
 
-    def __or__(self, other):
-        """ | operator """
+    def __lshift__(self, other):
+        """ << operator """
         return Compose(self, other)
 
     def __call__(self, arg):
@@ -81,7 +76,7 @@ class BaseGetter(C):
 
     def __init__(self, *args):
         super(BaseGetter, self).__init__(self.getter(*args))
-        self.args = ','.join(imap(str, args))
+        self.args = ','.join(map(str, args))
 
     @property
     def __name__(self):
@@ -100,7 +95,7 @@ class IG(BaseGetter):
         if len(args) == 1 and isinstance(args[0], basestring):
             names = args[0].split('.')
             if len(names) > 1:
-                return reduce(or_, imap(cls, reversed(names)))
+                return reduce(or_, map(cls, reversed(names)))
         # itemgetter(0), itemgetter(1, 2), itemgetter('item', 'date')
         return super(IG, cls).__new__(cls, *args)
 
@@ -136,11 +131,11 @@ class IterCompose(P):
 
 
 class Map(IterCompose):
-    f = imap
+    f = map
 
 
 class Filter(IterCompose):
-    f = ifilter
+    f = filter
 
 
 Int = C(int)
