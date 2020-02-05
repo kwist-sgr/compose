@@ -1,6 +1,6 @@
 # coding: utf-8
 from functools import partial, wraps
-from operator import itemgetter, attrgetter, or_
+from operator import itemgetter, attrgetter, lshift
 try:
     from itertools import imap as map, ifilter as filter
 except ImportError:
@@ -95,7 +95,7 @@ class IG(BaseGetter):
         if len(args) == 1 and isinstance(args[0], basestring):
             names = args[0].split('.')
             if len(names) > 1:
-                return reduce(or_, map(cls, reversed(names)))
+                return reduce(lshift, map(cls, reversed(names)))
         # itemgetter(0), itemgetter(1, 2), itemgetter('item', 'date')
         return super(IG, cls).__new__(cls, *args)
 
