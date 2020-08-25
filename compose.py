@@ -1,10 +1,5 @@
-# coding: utf-8
-from functools import partial, wraps
+from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
-try:
-    from itertools import imap as map, ifilter as filter
-except ImportError:
-    pass
 
 
 def flip(func):
@@ -20,7 +15,10 @@ def apply(func, arg):
     return func(arg)
 
 
-class Compose(object):
+class Compose:
+    """
+    Container for function compositions
+    """
     __slots__ = ['stack']
 
     def __init__(self, f, g):
@@ -45,7 +43,10 @@ class Compose(object):
         return reduce(f, reversed(self.stack), arg)
 
 
-class C(object):
+class C:
+    """
+    Function wrapper for compositions
+    """
     __slots__ = ['func', '__doc__']
 
     def __init__(self, func):
@@ -71,6 +72,9 @@ class C(object):
 
 
 class BaseGetter(C):
+    """
+    Base class for getters
+    """
     __slots__ = ['func', '__doc__', 'args']
     getter = None
 
@@ -84,15 +88,21 @@ class BaseGetter(C):
 
 
 class AG(BaseGetter):
+    """
+    Attribute getter
+    """
     getter = attrgetter
 
 
 class IG(BaseGetter):
+    """
+    Item getter
+    """
     getter = itemgetter
 
     def __new__(cls, *args):
         # support dot-format, e.g. itemgetter('item.menu.id')
-        if len(args) == 1 and isinstance(args[0], basestring):
+        if len(args) == 1 and isinstance(args[0], str):
             names = args[0].split('.')
             if len(names) > 1:
                 return reduce(lshift, map(cls, reversed(names)))
@@ -101,6 +111,9 @@ class IG(BaseGetter):
 
 
 class P(C):
+    """
+    Partial function
+    """
     NAME_ID = 'partial'
 
     def __init__(self, func, *args, **kwargs):
@@ -116,6 +129,9 @@ class P(C):
 
 
 class IterCompose(P):
+    """
+    Base class for iterators
+    """
     f = None
 
     def __init__(self, func):
