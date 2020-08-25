@@ -7,7 +7,7 @@ Out: 75
 
 ```python
 # f = lambda x: list(str(int(x['id'])))
-In : f = List << Str | Int | IG('id')
+In : f = List << Str << Int << IG('id')
 In : f({'id': '75', 'test': True})
 Out: ['7', '5']
 ```
