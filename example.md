@@ -65,17 +65,17 @@ Out: ['1', '5']
 ```
 
 ```python
-# f = lambda x: list(imap(int, x))
+# f = lambda x: list(map(int, x))
 In : f = List << Map(int)
 In : f
-Out: <Compose [list,imap(int)]>
+Out: <Compose [list,map(int)]>
 
 In : f(['4', '7'])
 Out: [4, 7]
 
 In : f = Sum << Map(int)
 In : f
-Out: <Compose [sum,imap(int)]>
+Out: <Compose [sum,map(int)]>
 
 In : f(['4', '7'])
 Out: 11
@@ -85,17 +85,17 @@ Out: 11
 # f = lambda m: {x[0] for x in m}
 In : f = Set << Map(IG(0))
 In : f
-Out: <Compose [set,imap(itemgetter(0))]>
+Out: <Compose [set,map(itemgetter(0))]>
 
 In : f([(1, '1'), (50, '05'), (11, '21'), (50, '50')])
 Out: set([1, 50, 11])
 ```
 
 ```python
-# f = lambda x: sum(imap(int, list(str(max(721, int(x['item']['id']))))))
+# f = lambda x: sum(map(int, list(str(max(721, int(x['item']['id']))))))
 In : f = Sum << Map(int) << List << Str << P(max, 721) << Int << IG('item.id')
 In : f
-Out: <Compose [sum,imap(int),list,str,partial(max),int,itemgetter(id),itemgetter(item)]>
+Out: <Compose [sum,map(int),list,str,partial(max),int,itemgetter(id),itemgetter(item)]>
 
 In : f({'item': {'id': '742', 'flag': 7}})
 Out: 13

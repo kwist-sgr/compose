@@ -47,17 +47,16 @@ class C:
     """
     Function wrapper for compositions
     """
-    __slots__ = ['func', '__doc__']
+    __slots__ = ['func']
 
     def __init__(self, func):
         self.func = func
-        self.__doc__ = func.__doc__
 
     def __repr__(self):
         return self.__name__
 
     def __dir__(self):
-        return ['__call__', '__name__', '__doc__', '__class__']
+        return ['__call__', '__name__', '__class__']
 
     @property
     def __name__(self):
@@ -75,7 +74,7 @@ class BaseGetter(C):
     """
     Base class for getters
     """
-    __slots__ = ['func', '__doc__', 'args']
+    __slots__ = ['func', 'args']
     getter = None
 
     def __init__(self, *args):
