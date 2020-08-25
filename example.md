@@ -77,8 +77,8 @@ In : f = Sum << Map(int)
 In : f
 Out: <Compose [sum,map(int)]>
 
-In : f(['4', '7'])
-Out: 11
+In : f('471')
+Out: 12
 ```
 
 ```python
