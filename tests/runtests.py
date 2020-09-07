@@ -10,9 +10,7 @@ from unittest.mock import patch, Mock, MagicMock
 try:
     import compose as s
 except ImportError as e:
-    raise RuntimeError(
-        'Compose module not found, reference tests/README.rst for instructions.'
-    ) from e
+    raise RuntimeError('Compose module not found, reference tests/README.rst for instructions.') from e
 
 
 # Make resource and runtime warning errors to ensure no usage of error prone patterns.
@@ -162,6 +160,21 @@ class ComposeTestCase(TestCase):
         c = a << b
         self.assertIsInstance(c, s.Compose)
         self.assertListEqual(c.stack, [a, b])
+
+
+class ItemGetterTestCase(TestCase):
+
+    def test_index(self):
+        pass
+
+    def test_name(self):
+        pass
+
+    def test_multi_index(self):
+        pass
+
+    def test_multi_name(self):
+        pass
 
 
 if __name__ == "__main__":
