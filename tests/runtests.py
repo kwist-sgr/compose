@@ -198,6 +198,13 @@ class ItemGetterTestCase(TestCase):
             f({})
         self.assertEqual(str(cm.exception), f"'{key}'")
 
+    def test_key_error_multi(self):
+        key = str(uuid4())
+        f = s.IG('a', 'b', key)
+        with self.assertRaises(KeyError) as cm:
+            f({'a': 14, 'b': 'value'})
+        self.assertEqual(str(cm.exception), f"'{key}'")
+
     def test_key_error_deep(self):
         key = str(uuid4())
         f = s.IG(f"a.b.{key}")
@@ -211,6 +218,11 @@ class ItemGetterTestCase(TestCase):
         self.assertTupleEqual(f(v), (v.a1, v.a2, v.a4))
 
     def test_multi_key(self):
+        f = s.IG('b', 'a')
+        v = self.create_sentinels('a b')
+        self.assertTupleEqual(f({'a': v.a, 'b': v.b}), (v.b, v.a))
+
+    def test_deep_key(self):
         f = s.IG('meta.info.value')
         value = self.sentinel['value']
         self.assertIs(f({'meta': {'info': {'value': value}}}), value)
