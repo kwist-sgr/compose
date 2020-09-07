@@ -30,8 +30,6 @@ Examples
     >>> from compose import Int, IG, Sum, Map
    
     >>> f = Int << IG('item.id')   # f = lambda x: int(x['item']['id'])
-    >>> f
-    <Compose [int,IG(id),IG(item)]>
     >>> f({'item': {'id': '75', 'v': 1}})
     75
 
@@ -40,7 +38,5 @@ Examples
     12
 
     >>> f = Sum << Map(int) << IG(1) << IG('item.x')  # f = lambda x: sum(map(int, x['item']['id'][1]))
-    >>> f
-    <Compose [sum,map(int),IG(1),IG(x),IG(item)]>
     >>> f({'item': {'x': ['742', '153', '98'], 'f': 7}})
     9
