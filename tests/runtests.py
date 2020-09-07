@@ -46,6 +46,10 @@ class TestCase(unittest.TestCase):
 
     sentinel = _Sentinel()
 
+    def create_sentinels(self, names):
+        Row = namedtuple('Row', names)
+        return Row._make(self.sentinel[f'value_{f}'] for f in Row._fields)
+
     def tearDown(self):
         # Collect garbage on tearDown. (This can print ResourceWarnings.)
         gc.collect()
@@ -72,26 +76,26 @@ class HelpersTestCase(TestCase):
 class CompositionTestCase(TestCase):
 
     def test_create_other_other(self):
-        a, b = self.sentinel['a'], self.sentinel['b']
-        c = s.Compose(a, b)
+        v = self.create_sentinels('a b')
+        c = s.Compose(*v)
         self.assertIsInstance(c, s.Compose)
-        self.assertListEqual(c.stack, [a, b])
+        self.assertListEqual(c.stack, [v.a, v.b])
 
     def test_create_compose_other(self):
-        a, b, x, y = self.sentinel['a'], self.sentinel['b'], self.sentinel['x'], self.sentinel['y']
-        z = s.Compose(a, b)
-        z.stack.append(y)
-        c = s.Compose(z, x)
+        v = self.create_sentinels('a b x y')
+        z = s.Compose(v.a, v.b)
+        z.stack.append(v.y)
+        c = s.Compose(z, v.x)
         self.assertIsInstance(c, s.Compose)
-        self.assertListEqual(c.stack, [a, b, y, x])
+        self.assertListEqual(c.stack, [v.a, v.b, v.y, v.x])
 
     def test_create_other_compose(self):
-        a, b, x, y = self.sentinel['a'], self.sentinel['b'], self.sentinel['x'], self.sentinel['y']
-        z = s.Compose(a, b)
-        z.stack.append(y)
-        c = s.Compose(x, z)
+        v = self.create_sentinels('a b x y')
+        z = s.Compose(v.a, v.b)
+        z.stack.append(v.y)
+        c = s.Compose(v.x, z)
         self.assertIsInstance(c, s.Compose)
-        self.assertListEqual(c.stack, [x, a, b, y])
+        self.assertListEqual(c.stack, [v.x, v.a, v.b, v.y])
 
     @patch('compose.Compose.__lshift__')
     def test_lshift(self, mock_shift):
@@ -102,9 +106,7 @@ class CompositionTestCase(TestCase):
         mock_shift.assert_called_once_with(other)
 
     def test_compose(self):
-        Value = namedtuple('Values', 'x y z')
-        value = Value._make([self.sentinel[f'value_{f}'] for f in Value._fields])
-
+        value = self.create_sentinels('x y z')
         c = s.Compose(value.x, value.y)
         new = c << value.z
         self.assertIsInstance(new, s.Compose)
@@ -117,17 +119,15 @@ class CompositionTestCase(TestCase):
         mock_reduce.return_value = reduce = self.sentinel['reduce']
         mock_reversed.return_value = rev = self.sentinel['reversed']
         mock_flip.return_value = flip = self.sentinel['flip']
-        a, b, arg = self.sentinel['a'], self.sentinel['b'], self.sentinel['arg']
-        c = s.Compose(a, b)
-        self.assertIs(c(arg), reduce)
+        v = self.create_sentinels('a b arg')
+        c = s.Compose(v.a, v.b)
+        self.assertIs(c(v.arg), reduce)
         mock_flip.assert_called_once_with(s.apply)
         mock_reversed.assert_called_once_with(c.stack)
-        mock_reduce.assert_called_once_with(flip, rev, arg)
+        mock_reduce.assert_called_once_with(flip, rev, v.arg)
 
     def test_call_result(self):
-        Value = namedtuple('Values', 'x y z arg')
-
-        value = Value._make([self.sentinel[f'value_{f}'] for f in Value._fields])
+        value = self.create_sentinels('x y z arg')
         x = Mock(name='x', return_value=value.x)
         y = Mock(name='y', return_value=value.y)
         z = Mock(name='z', return_value=value.z)
@@ -152,9 +152,7 @@ class ComposeTestCase(TestCase):
         mock_shift.assert_called_once_with(other)
 
     def test_compose(self):
-        Value = namedtuple('Values', 'a b')
-        value = Value._make([self.sentinel[f'value_{f}'] for f in Value._fields])
-
+        value = self.create_sentinels('a b')
         a = s.C(value.a)
         b = s.C(value.b)
         c = a << b
@@ -163,6 +161,9 @@ class ComposeTestCase(TestCase):
 
 
 class ItemGetterTestCase(TestCase):
+
+    def test_arg_required(self):
+        pass
 
     def test_index(self):
         pass
