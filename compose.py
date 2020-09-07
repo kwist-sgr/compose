@@ -2,7 +2,7 @@ from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
 
 
-__version__ = '0.1'
+__version__ = '0.1.2'
 
 
 def flip(func):
@@ -18,7 +18,14 @@ def apply(func, arg):
     return func(arg)
 
 
-class Compose:
+class Shift:
+
+    def __lshift__(self, other):
+        """ << operator """
+        return Compose(self, other)
+
+
+class Compose(Shift):
     """
     Container for function compositions
     """
@@ -38,18 +45,11 @@ class Compose:
             ','.join(map(attrgetter('__name__'), self.stack))
         )
 
-    def __dir__(self):
-        return ['__call__', '__class__']
-
-    def __lshift__(self, other):
-        """ << operator """
-        return self.__class__(self, other)
-
     def __call__(self, arg):
         return reduce(flip(apply), reversed(self.stack), arg)
 
 
-class C:
+class C(Shift):
     """
     Function wrapper for compositions
     """
@@ -61,16 +61,9 @@ class C:
     def __repr__(self):
         return self.__name__
 
-    def __dir__(self):
-        return ['__call__', '__name__', '__class__']
-
     @property
     def __name__(self):
         return self.func.__name__
-
-    def __lshift__(self, other):
-        """ << operator """
-        return Compose(self, other)
 
     def __call__(self, arg):
         return self.func(arg)
@@ -89,7 +82,7 @@ class BaseGetter(C):
 
     @property
     def __name__(self):
-        return "{}({})".format(self.func.__class__.__name__, self.args)
+        return f"{self.func.__class__.__name__}({self.args})"
 
 
 class AG(BaseGetter):
@@ -126,7 +119,7 @@ class P(C):
 
     @property
     def __name__(self):
-        return "{}({})".format(self.NAME_ID, self.func_name)
+        return f"{self.NAME_ID}({self.func_name})"
 
     @property
     def func_name(self):
