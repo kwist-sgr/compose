@@ -4,7 +4,7 @@ import unittest
 import warnings
 
 from collections import namedtuple
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 
 try:
@@ -53,7 +53,7 @@ class TestCase(unittest.TestCase):
         gc.collect()
 
 
-class HelpersTest(TestCase):
+class HelpersTestCase(TestCase):
 
     def test_flip(self):
 
@@ -71,7 +71,7 @@ class HelpersTest(TestCase):
         func.assert_called_once_with(arg)
 
 
-class ComposeTest(TestCase):
+class CompositionTestCase(TestCase):
 
     def test_create_other_other(self):
         a, b = self.sentinel['a'], self.sentinel['b']
@@ -95,8 +95,22 @@ class ComposeTest(TestCase):
         self.assertIsInstance(c, s.Compose)
         self.assertListEqual(c.stack, [x, a, b, y])
 
+    @patch('compose.Compose.__lshift__')
+    def test_lshift(self, mock_shift):
+        c = s.Compose(Mock(name='a'), Mock(name='b'))
+        mock_shift.return_value = shift = self.sentinel['shift']
+        other = self.sentinel['other']
+        self.assertIs(c << other, shift)
+        mock_shift.assert_called_once_with(other)
+
     def test_compose(self):
-        pass
+        Value = namedtuple('Values', 'x y z')
+        value = Value._make([self.sentinel[f'value_{f}'] for f in Value._fields])
+
+        c = s.Compose(value.x, value.y)
+        new = c << value.z
+        self.assertIsInstance(new, s.Compose)
+        self.assertListEqual(new.stack, list(value))
 
     @patch('compose.reversed')
     @patch('compose.flip')
@@ -113,20 +127,41 @@ class ComposeTest(TestCase):
         mock_reduce.assert_called_once_with(flip, rev, arg)
 
     def test_call_result(self):
-        Values = namedtuple('Values', 'a b x arg')
+        Value = namedtuple('Values', 'x y z arg')
 
-        values = Values._make([self.sentinel[f'value_{i}'] for i in range(4)])
-        a = Mock(name='a', return_value=values.a)
-        b = Mock(name='b', return_value=values.b)
-        x = Mock(name='x', return_value=values.x)
+        value = Value._make([self.sentinel[f'value_{f}'] for f in Value._fields])
+        x = Mock(name='x', return_value=value.x)
+        y = Mock(name='y', return_value=value.y)
+        z = Mock(name='z', return_value=value.z)
 
-        c = s.Compose(a, b)
-        c.stack.append(x)
-        # Mock.a called last
-        self.assertIs(c(values.arg), values.a)
-        x.assert_called_once_with(values.arg)
-        b.assert_called_once_with(values.x)
-        a.assert_called_once_with(values.b)
+        c = s.Compose(x, y)
+        c.stack.append(z)
+        # `x` called last
+        self.assertIs(c(value.arg), value.x)
+        z.assert_called_once_with(value.arg)
+        y.assert_called_once_with(value.z)
+        x.assert_called_once_with(value.y)
+
+
+class ComposeTestCase(TestCase):
+
+    @patch('compose.C.__lshift__')
+    def test_lshift(self, mock_shift):
+        mock_shift.return_value = shift = self.sentinel['shift']
+        a = s.C(Mock(name='func_a'))
+        other = self.sentinel['other']
+        self.assertIs(a << other, shift)
+        mock_shift.assert_called_once_with(other)
+
+    def test_compose(self):
+        Value = namedtuple('Values', 'a b')
+        value = Value._make([self.sentinel[f'value_{f}'] for f in Value._fields])
+
+        a = s.C(value.a)
+        b = s.C(value.b)
+        c = a << b
+        self.assertIsInstance(c, s.Compose)
+        self.assertListEqual(c.stack, [a, b])
 
 
 if __name__ == "__main__":
