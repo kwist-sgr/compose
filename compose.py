@@ -75,6 +75,7 @@ class BaseGetter(C):
     """
     __slots__ = ['func', 'args']
     getter = None
+    NAME_ID = None
 
     def __init__(self, *args):
         super().__init__(self.getter(*args))
@@ -82,7 +83,7 @@ class BaseGetter(C):
 
     @property
     def __name__(self):
-        return f"{self.func.__class__.__name__}({self.args})"
+        return f"{self.NAME}({self.args})"
 
 
 class AG(BaseGetter):
@@ -90,6 +91,7 @@ class AG(BaseGetter):
     Attribute getter
     """
     getter = attrgetter
+    NAME = 'AG'
 
 
 class IG(BaseGetter):
@@ -97,6 +99,7 @@ class IG(BaseGetter):
     Item getter
     """
     getter = itemgetter
+    NAME = 'IG'
 
     def __new__(cls, *args):
         # support dot-format, e.g. itemgetter('item.menu.id')
@@ -112,14 +115,14 @@ class P(C):
     """
     Partial function
     """
-    NAME_ID = 'partial'
+    NAME = 'partial'
 
     def __init__(self, func, *args, **kwargs):
         super().__init__(partial(func, *args, **kwargs))
 
     @property
     def __name__(self):
-        return f"{self.NAME_ID}({self.func_name})"
+        return f"{self.NAME}({self.func_name})"
 
     @property
     def func_name(self):
@@ -134,10 +137,7 @@ class IterCompose(P):
 
     def __init__(self, func):
         super().__init__(self.f, func)
-
-    @property
-    def NAME_ID(self):
-        return self.f.__name__
+        self.NAME = self.f.__name__
 
     @property
     def func_name(self):
