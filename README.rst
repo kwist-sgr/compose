@@ -8,6 +8,11 @@ Compose is a package for `function composition <https://en.wikipedia.org/wiki/Fu
 
 .. teaser-end
 
+Restrictions
+------------
+
+Only functions with one argument are supported.
+
 Installation
 ------------
 
