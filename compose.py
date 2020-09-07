@@ -25,9 +25,12 @@ class Compose:
     __slots__ = ['stack']
 
     def __init__(self, f, g):
-        f = f.stack if isinstance(f, self.__class__) else [f]
-        g = g.stack if isinstance(g, self.__class__) else [g]
-        self.stack = f + g
+        self.stack = []
+        for x in (f, g):
+            if isinstance(x, self.__class__):
+                self.stack.extend(x.stack)
+            else:
+                self.stack.append(x)
 
     def __repr__(self):
         return "<{} [{}]>".format(
@@ -42,8 +45,8 @@ class Compose:
         """ << operator """
         return self.__class__(self, other)
 
-    def __call__(self, arg, f=flip(apply)):
-        return reduce(f, reversed(self.stack), arg)
+    def __call__(self, arg):
+        return reduce(flip(apply), reversed(self.stack), arg)
 
 
 class C:
