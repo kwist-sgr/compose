@@ -2,6 +2,9 @@ from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
 
 
+__version__ = '0.1'
+
+
 def flip(func):
 
     @wraps(func)
