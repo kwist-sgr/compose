@@ -166,16 +166,39 @@ class ItemGetterTestCase(TestCase):
         pass
 
     def test_index(self):
-        pass
+        f = s.IG(4)
+        v = self.create_sentinels('a0 a1 a2 a3 a4 a5')
+        self.assertIs(f(v), v.a4)
 
-    def test_name(self):
-        pass
+    def test_index_error_signle(self):
+        v = self.create_sentinels('a0 a1 a2 a3 a4 a5')
+
+        f = s.IG(14)
+        with self.subTest('single'):
+            f(v)
+
+        f = s.IG(1, 2, 14)
+        with self.subTest('multi'):
+            f(v)
+
+    def test_key(self):
+        f = s.IG('value')
+        value = self.sentinel['value']
+        self.assertIs(f({'value': value}), value)
+
+    def test_key_error(self):
+        f = s.IG('value')
+        f({})
 
     def test_multi_index(self):
-        pass
+        f = s.IG(1, 2, 4)
+        v = self.create_sentinels('a0 a1 a2 a3 a4 a5')
+        self.assertTupleEqual(f(v), (v.a1, v.a2, v.a4))
 
-    def test_multi_name(self):
-        pass
+    def test_multi_key(self):
+        f = s.IG('meta.info.value')
+        value = self.sentinel['value']
+        self.assertIs(f({'meta': {'info': {'value': value}}}), value)
 
 
 if __name__ == "__main__":
