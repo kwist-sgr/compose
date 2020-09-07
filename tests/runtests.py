@@ -3,6 +3,7 @@ import gc
 import unittest
 import warnings
 
+from uuid import uuid4
 from collections import namedtuple
 from unittest.mock import patch, Mock, MagicMock
 
@@ -163,7 +164,9 @@ class ComposeTestCase(TestCase):
 class ItemGetterTestCase(TestCase):
 
     def test_arg_required(self):
-        pass
+        with self.assertRaises(TypeError) as cm:
+            s.IG()
+        self.assertEqual(str(cm.exception), 'itemgetter expected 1 argument, got 0')
 
     def test_index(self):
         f = s.IG(4)
@@ -171,15 +174,17 @@ class ItemGetterTestCase(TestCase):
         self.assertIs(f(v), v.a4)
 
     def test_index_error_signle(self):
-        v = self.create_sentinels('a0 a1 a2 a3 a4 a5')
-
         f = s.IG(14)
-        with self.subTest('single'):
-            f(v)
+        with self.assertRaises(IndexError) as cm:
+            f(self.create_sentinels('a0 a1 a2 a3 a4 a5'))
+        self.assertEqual(str(cm.exception), 'tuple index out of range')
 
+    def test_index_error_multi(self):
         f = s.IG(1, 2, 14)
         with self.subTest('multi'):
-            f(v)
+            with self.assertRaises(IndexError) as cm:
+                f(self.create_sentinels('a0 a1 a2 a3 a4 a5'))
+            self.assertEqual(str(cm.exception), 'tuple index out of range')
 
     def test_key(self):
         f = s.IG('value')
@@ -187,8 +192,18 @@ class ItemGetterTestCase(TestCase):
         self.assertIs(f({'value': value}), value)
 
     def test_key_error(self):
-        f = s.IG('value')
-        f({})
+        key = str(uuid4())
+        f = s.IG(key)
+        with self.assertRaises(KeyError) as cm:
+            f({})
+        self.assertEqual(str(cm.exception), f"'{key}'")
+
+    def test_key_error_deep(self):
+        key = str(uuid4())
+        f = s.IG(f"a.b.{key}")
+        with self.assertRaises(KeyError) as cm:
+            f({'a': {'b': {}}})
+        self.assertEqual(str(cm.exception), f"'{key}'")
 
     def test_multi_index(self):
         f = s.IG(1, 2, 4)
