@@ -2,7 +2,7 @@ from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
 
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 
 def flip(func):
@@ -102,11 +102,17 @@ class IG(BaseGetter):
     NAME = 'IG'
 
     def __new__(cls, *args):
-        # support dot-format, e.g. itemgetter('item.menu.id')
-        if len(args) == 1 and isinstance(args[0], str):
-            names = args[0].split('.')
+        try:
+            arg, *others = args
+        except ValueError:
+            raise TypeError('itemgetter expected 1 argument, got 0')
+
+        if isinstance(arg, str) and not others:
+            # support dot-format, e.g. itemgetter('item.menu.id')
+            names = arg.split('.')
             if len(names) > 1:
                 return reduce(lshift, map(cls, reversed(names)))
+
         # itemgetter(0), itemgetter(1, 2), itemgetter('item', 'date')
         return super().__new__(cls)
 
