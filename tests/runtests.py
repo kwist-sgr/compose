@@ -3,6 +3,7 @@ import gc
 import unittest
 import warnings
 
+from collections import namedtuple
 from unittest.mock import patch, Mock
 
 
@@ -94,8 +95,7 @@ class ComposeTest(TestCase):
         self.assertIsInstance(c, s.Compose)
         self.assertListEqual(c.stack, [x, a, b, y])
 
-    @patch('compose.reduce')
-    def test_compose(self, mock_reduce):
+    def test_compose(self):
         pass
 
     @patch('compose.reversed')
@@ -103,22 +103,30 @@ class ComposeTest(TestCase):
     @patch('compose.reduce')
     def test_call(self, mock_reduce, mock_flip, mock_reversed):
         mock_reduce.return_value = reduce = self.sentinel['reduce']
+        mock_reversed.return_value = rev = self.sentinel['reversed']
         mock_flip.return_value = flip = self.sentinel['flip']
         a, b, arg = self.sentinel['a'], self.sentinel['b'], self.sentinel['arg']
         c = s.Compose(a, b)
         self.assertIs(c(arg), reduce)
         mock_flip.assert_called_once_with(s.apply)
-        mock_reduce.assert_called_once_with(flip, [b, a], arg)
+        mock_reversed.assert_called_once_with(c.stack)
+        mock_reduce.assert_called_once_with(flip, rev, arg)
 
     def test_call_result(self):
+        Values = namedtuple('Values', 'a b x arg')
 
-        def a():
-            pass
-
-        def b():
-            pass
+        values = Values._make([self.sentinel[f'value_{i}'] for i in range(4)])
+        a = Mock(name='a', return_value=values.a)
+        b = Mock(name='b', return_value=values.b)
+        x = Mock(name='x', return_value=values.x)
 
         c = s.Compose(a, b)
+        c.stack.append(x)
+        # Mock.a called last
+        self.assertIs(c(values.arg), values.a)
+        x.assert_called_once_with(values.arg)
+        b.assert_called_once_with(values.x)
+        a.assert_called_once_with(values.b)
 
 
 if __name__ == "__main__":
