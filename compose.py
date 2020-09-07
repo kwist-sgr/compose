@@ -81,7 +81,7 @@ class BaseGetter(C):
     getter = None
 
     def __init__(self, *args):
-        super(BaseGetter, self).__init__(self.getter(*args))
+        super().__init__(self.getter(*args))
         self.args = ','.join(map(str, args))
 
     @property
@@ -109,7 +109,7 @@ class IG(BaseGetter):
             if len(names) > 1:
                 return reduce(lshift, map(cls, reversed(names)))
         # itemgetter(0), itemgetter(1, 2), itemgetter('item', 'date')
-        return super(IG, cls).__new__(cls, *args)
+        return super().__new__(cls)
 
 
 class P(C):
@@ -119,7 +119,7 @@ class P(C):
     NAME_ID = 'partial'
 
     def __init__(self, func, *args, **kwargs):
-        super(P, self).__init__(partial(func, *args, **kwargs))
+        super().__init__(partial(func, *args, **kwargs))
 
     @property
     def __name__(self):
@@ -137,7 +137,7 @@ class IterCompose(P):
     f = None
 
     def __init__(self, func):
-        super(IterCompose, self).__init__(self.f, func)
+        super().__init__(self.f, func)
 
     @property
     def NAME_ID(self):
