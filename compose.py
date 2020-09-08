@@ -2,7 +2,7 @@ from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
 
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 
 def flip(func):
@@ -75,7 +75,7 @@ class BaseGetter(C):
     """
     __slots__ = ['func', 'args']
     getter = None
-    NAME_ID = None
+    NAME = None
 
     def __init__(self, *args):
         super().__init__(self.getter(*args))
@@ -162,5 +162,6 @@ Int = C(int)
 Str = C(str)
 Set = C(set)
 List = C(list)
+Dict = C(dict)
 
 Sum = C(sum)

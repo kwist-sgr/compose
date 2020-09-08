@@ -160,6 +160,13 @@ class ComposeTestCase(TestCase):
         self.assertIsInstance(c, s.Compose)
         self.assertListEqual(c.stack, [a, b])
 
+    def test_call(self):
+        v = self.create_sentinels('arg res')
+        func = MagicMock(name='func', return_value=v.res)
+        a = s.C(func)
+        self.assertIs(a(v.arg), v.res)
+        func.assert_called_once_with(v.arg)
+
 
 class AttrGetterTestCase(TestCase):
 
@@ -272,6 +279,54 @@ class ItemGetterTestCase(TestCase):
             r = s.IG('a.b.c')
             self.assertIsInstance(r, s.Compose)
             self.assertEqual(len(r.stack), 3)
+
+
+class PartialTestCase(TestCase):
+    pass
+
+
+class MapComposeTestCase(TestCase):
+    pass
+
+
+class FilterComposeTestCase(TestCase):
+    pass
+
+
+class CommonTestCase(TestCase):
+
+    def test_int(self):
+        self.assertIsInstance(s.Int, s.C)
+        self.assertIs(s.Int.func, int)
+        self.assertEqual(s.Int('25'), 25)
+
+    def test_str(self):
+        self.assertIsInstance(s.Str, s.C)
+        self.assertIs(s.Str.func, str)
+        self.assertEqual(s.Str(26), '26')
+
+    def test_set(self):
+        self.assertIsInstance(s.Set, s.C)
+        self.assertIs(s.Set.func, set)
+        self.assertSetEqual(s.Set('251125'), {'1', '2', '5'})
+
+    def test_list(self):
+        self.assertIsInstance(s.List, s.C)
+        self.assertIs(s.List.func, list)
+        self.assertListEqual(s.List('25125'), ['2', '5', '1', '2', '5'])
+
+    def test_dict(self):
+        self.assertIsInstance(s.Dict, s.C)
+        self.assertIs(s.Dict.func, dict)
+        self.assertDictEqual(
+            s.Dict([('x', 15), ('y', 'Y'), ('z', [1])]),
+            {'x': 15, 'y': 'Y', 'z': [1]}
+        )
+
+    def test_sum(self):
+        self.assertIsInstance(s.Sum, s.C)
+        self.assertIs(s.Sum.func, sum)
+        self.assertEqual(s.Sum([1, 5, 9, 2]), 17)
 
 
 if __name__ == "__main__":
