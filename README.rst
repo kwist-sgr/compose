@@ -29,18 +29,23 @@ Examples
 
     >>> from compose import Int, IG, Sum, Map, Dict
    
-    >>> f = Int << IG('item.id')   # f = lambda x: int(x['item']['id'])
+    >>> # f = lambda x: int(x['item']['id'])
+    >>> f = Int << IG('item.id')
     >>> f({'item': {'id': '75', 'v': 1}})
     75
 
-    >>> f = Sum << Map(int)  # f = lambda x: sum(map(int, x))
+    >>> # f = lambda x: int(x['item']['id'])
+    >>> f = Sum << Map(int)
     >>> f('471')
     12
 
-    >>> f = Sum << Map(int) << IG(1) << IG('item.x')  # f = lambda x: sum(map(int, x['item']['id'][1]))
+    >>> # f = lambda x: sum(map(int, x['item']['id'][1]))
+    >>> f = Sum << Map(int) << IG(1) << IG('item.x')
     >>> f({'item': {'x': ['742', '153', '98'], 'f': 7}})
     9
     
-    >>> f = Dict << Map(IG(0, 2))  # f = lambda x: dict(map(itemgetter(0, 2), x))
+    >>> # f = lambda x: dict(map(itemgetter(0, 2), x))
+    >>> # f = lambda x: {i[0]: x[i] for i in x}
+    >>> f = Dict << Map(IG(0, 2))
     >>> f([('a', 17, 71), ('b', 26, 62), ('c', 39, 93)])
     {'a': 71, 'b': 62, 'c': 93}
