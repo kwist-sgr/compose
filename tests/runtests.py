@@ -78,29 +78,29 @@ class CompositionTestCase(TestCase):
 
     def test_create_other_other(self):
         v = self.create_sentinels('a b')
-        c = s.Compose(*v)
+        c = s.Compose.create(*v)
         self.assertIsInstance(c, s.Compose)
         self.assertListEqual(c.stack, [v.a, v.b])
 
     def test_create_compose_other(self):
         v = self.create_sentinels('a b x y')
-        z = s.Compose(v.a, v.b)
+        z = s.Compose.create(v.a, v.b)
         z.stack.append(v.y)
-        c = s.Compose(z, v.x)
+        c = s.Compose.create(z, v.x)
         self.assertIsInstance(c, s.Compose)
         self.assertListEqual(c.stack, [v.a, v.b, v.y, v.x])
 
     def test_create_other_compose(self):
         v = self.create_sentinels('a b x y')
-        z = s.Compose(v.a, v.b)
+        z = s.Compose.create(v.a, v.b)
         z.stack.append(v.y)
-        c = s.Compose(v.x, z)
+        c = s.Compose.create(v.x, z)
         self.assertIsInstance(c, s.Compose)
         self.assertListEqual(c.stack, [v.x, v.a, v.b, v.y])
 
     @patch('compose.Compose.__lshift__')
     def test_lshift(self, mock_shift):
-        c = s.Compose(Mock(name='a'), Mock(name='b'))
+        c = s.Compose.create(Mock(name='a'), Mock(name='b'))
         mock_shift.return_value = shift = self.sentinel['shift']
         other = self.sentinel['other']
         self.assertIs(c << other, shift)
@@ -108,7 +108,7 @@ class CompositionTestCase(TestCase):
 
     def test_compose(self):
         value = self.create_sentinels('x y z')
-        c = s.Compose(value.x, value.y)
+        c = s.Compose.create(value.x, value.y)
         new = c << value.z
         self.assertIsInstance(new, s.Compose)
         self.assertListEqual(new.stack, list(value))
@@ -121,7 +121,7 @@ class CompositionTestCase(TestCase):
         mock_reversed.return_value = rev = self.sentinel['reversed']
         mock_flip.return_value = flip = self.sentinel['flip']
         v = self.create_sentinels('a b arg')
-        c = s.Compose(v.a, v.b)
+        c = s.Compose.create(v.a, v.b)
         self.assertIs(c(v.arg), reduce)
         mock_flip.assert_called_once_with(s.apply)
         mock_reversed.assert_called_once_with(c.stack)
@@ -133,7 +133,7 @@ class CompositionTestCase(TestCase):
         y = Mock(name='y', return_value=value.y)
         z = Mock(name='z', return_value=value.z)
 
-        c = s.Compose(x, y)
+        c = s.Compose.create(x, y)
         c.stack.append(z)
         # `x` called last
         self.assertIs(c(value.arg), value.x)

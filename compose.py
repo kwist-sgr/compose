@@ -1,8 +1,11 @@
+from dataclasses import dataclass
+
+from typing import List, Callable
 from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
 
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 
 def flip(func):
@@ -22,28 +25,27 @@ class Shift:
 
     def __lshift__(self, other):
         """ << operator """
-        return Compose(self, other)
+        return Compose.create(self, other)
 
 
+@dataclass(frozen=True)
 class Compose(Shift):
     """
     Container for function compositions
     """
-    __slots__ = ['stack']
+    stack: List[Callable]
 
-    def __init__(self, f, g):
-        self.stack = []
-        for x in (f, g):
-            if isinstance(x, self.__class__):
-                self.stack.extend(x.stack)
-            else:
-                self.stack.append(x)
+    @classmethod
+    def create(cls, f, g):
+        stack = list(f.stack) if isinstance(f, cls) else [f]
+        if isinstance(g, cls):
+            stack.extend(g.stack)
+        else:
+            stack.append(g)
+        return cls(stack)
 
     def __repr__(self):
-        return "<{} [{}]>".format(
-            self.__class__.__name__,
-            ','.join(map(attrgetter('__name__'), self.stack))
-        )
+        return f"<{self.__class__.__name__} [{','.join(map(repr, self.stack))}]>"
 
     def __call__(self, arg):
         return reduce(flip(apply), reversed(self.stack), arg)
@@ -53,17 +55,15 @@ class C(Shift):
     """
     Function wrapper for compositions
     """
-    __slots__ = ['func']
-
     def __init__(self, func):
         self.func = func
-
-    def __repr__(self):
-        return self.__name__
 
     @property
     def __name__(self):
         return self.func.__name__
+
+    def __repr__(self):
+        return self.__name__
 
     def __call__(self, arg):
         return self.func(arg)
@@ -73,17 +73,13 @@ class BaseGetter(C):
     """
     Base class for getters
     """
-    __slots__ = ['func', 'args']
-    getter = None
-    NAME = None
-
     def __init__(self, *args):
         super().__init__(self.getter(*args))
-        self.args = ','.join(map(str, args))
+        self.args = args
 
     @property
     def __name__(self):
-        return f"{self.NAME}({self.args})"
+        return f"{self.__class__.__name__}({','.join(map(str, self.args))})"
 
 
 class AG(BaseGetter):
@@ -91,7 +87,6 @@ class AG(BaseGetter):
     Attribute getter
     """
     getter = attrgetter
-    NAME = 'AG'
 
 
 class IG(BaseGetter):
@@ -99,7 +94,6 @@ class IG(BaseGetter):
     Item getter
     """
     getter = itemgetter
-    NAME = 'IG'
 
     def __new__(cls, *args):
         try:
@@ -121,18 +115,13 @@ class P(C):
     """
     Partial function
     """
-    NAME = 'partial'
 
     def __init__(self, func, *args, **kwargs):
         super().__init__(partial(func, *args, **kwargs))
 
     @property
     def __name__(self):
-        return f"{self.NAME}({self.func_name})"
-
-    @property
-    def func_name(self):
-        return self.func.func.__name__
+        return f"partial({self.func.func.__name__})"
 
 
 class IterCompose(P):
@@ -143,11 +132,10 @@ class IterCompose(P):
 
     def __init__(self, func):
         super().__init__(self.f, func)
-        self.NAME = self.f.__name__
 
     @property
-    def func_name(self):
-        return self.func.args[0].__name__
+    def __name__(self):
+        return f"{self.f.__name__}({self.func.args[0].__name__})"
 
 
 class Map(IterCompose):
