@@ -161,6 +161,40 @@ class ComposeTestCase(TestCase):
         self.assertListEqual(c.stack, [a, b])
 
 
+class AttrGetterTestCase(TestCase):
+
+    def test_arg_required(self):
+        with self.assertRaises(TypeError) as cm:
+            s.AG()
+        self.assertEqual(str(cm.exception), 'attrgetter expected 1 argument, got 0')
+
+    def test_name_single(self):
+        f = s.AG('b3')
+        v = self.create_sentinels('b0 b1 b2 b3 b4 b5')
+        self.assertIs(f(v), v.b3)
+
+    def test_name_multi(self):
+        f = s.AG('b3', 'b0', 'b4')
+        v = self.create_sentinels('b0 b1 b2 b3 b4 b5')
+        self.assertTupleEqual(f(v), (v.b3, v.b0, v.b4))
+
+    def test_name_deep(self):
+        item = MagicMock(name='item')
+        item.a.b.id = uid = self.sentinel['uid']
+        f = s.AG('a.b.id')
+        self.assertIs(f(item), uid)
+
+    def test_name_mixed(self):
+        v = self.create_sentinels('c y value')
+        f = s.AG('a.b.c', 'value', 'x.y')
+
+        item = MagicMock(name='item')
+        item.a.b.c = v.c
+        item.x.y = v.y
+        item.value = v.value
+        self.assertTupleEqual(f(item), (v.c, v.value, v.y))
+
+
 class ItemGetterTestCase(TestCase):
 
     def test_arg_required(self):
@@ -226,6 +260,18 @@ class ItemGetterTestCase(TestCase):
         f = s.IG('meta.info.value')
         value = self.sentinel['value']
         self.assertIs(f({'meta': {'info': {'value': value}}}), value)
+
+    def test_key_compose(self):
+        with self.subTest('multi'):
+            self.assertIsInstance(s.IG('a', 'b', 'c'), s.IG)
+
+        with self.subTest('single'):
+            self.assertIsInstance(s.IG('a'), s.IG)
+
+        with self.subTest('deep'):
+            r = s.IG('a.b.c')
+            self.assertIsInstance(r, s.Compose)
+            self.assertEqual(len(r.stack), 3)
 
 
 if __name__ == "__main__":
