@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from typing import List, Callable
+from typing import Tuple, Callable
 from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
 
@@ -33,15 +33,15 @@ class Compose(Shift):
     """
     Container for function compositions
     """
-    stack: List[Callable]
+    stack: Tuple[Callable]
 
     @classmethod
     def create(cls, f, g):
-        stack = list(f.stack) if isinstance(f, cls) else [f]
+        stack = tuple(f.stack) if isinstance(f, cls) else (f,)
         if isinstance(g, cls):
-            stack.extend(g.stack)
+            stack += g.stack
         else:
-            stack.append(g)
+            stack += (g,)
         return cls(stack)
 
     def __repr__(self):

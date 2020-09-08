@@ -80,23 +80,21 @@ class CompositionTestCase(TestCase):
         v = self.create_sentinels('a b')
         c = s.Compose.create(*v)
         self.assertIsInstance(c, s.Compose)
-        self.assertListEqual(c.stack, [v.a, v.b])
+        self.assertTupleEqual(c.stack, (v.a, v.b))
 
     def test_create_compose_other(self):
         v = self.create_sentinels('a b x y')
-        z = s.Compose.create(v.a, v.b)
-        z.stack.append(v.y)
+        z = s.Compose((v.a, v.b, v.y))
         c = s.Compose.create(z, v.x)
         self.assertIsInstance(c, s.Compose)
-        self.assertListEqual(c.stack, [v.a, v.b, v.y, v.x])
+        self.assertTupleEqual(c.stack, (v.a, v.b, v.y, v.x))
 
     def test_create_other_compose(self):
         v = self.create_sentinels('a b x y')
-        z = s.Compose.create(v.a, v.b)
-        z.stack.append(v.y)
+        z = s.Compose((v.a, v.b, v.y))
         c = s.Compose.create(v.x, z)
         self.assertIsInstance(c, s.Compose)
-        self.assertListEqual(c.stack, [v.x, v.a, v.b, v.y])
+        self.assertTupleEqual(c.stack, (v.x, v.a, v.b, v.y))
 
     @patch('compose.Compose.__lshift__')
     def test_lshift(self, mock_shift):
@@ -111,7 +109,7 @@ class CompositionTestCase(TestCase):
         c = s.Compose.create(value.x, value.y)
         new = c << value.z
         self.assertIsInstance(new, s.Compose)
-        self.assertListEqual(new.stack, list(value))
+        self.assertTupleEqual(new.stack, value)
 
     @patch('compose.reversed')
     @patch('compose.flip')
@@ -133,8 +131,7 @@ class CompositionTestCase(TestCase):
         y = Mock(name='y', return_value=value.y)
         z = Mock(name='z', return_value=value.z)
 
-        c = s.Compose.create(x, y)
-        c.stack.append(z)
+        c = s.Compose((x, y, z))
         # `x` called last
         self.assertIs(c(value.arg), value.x)
         z.assert_called_once_with(value.arg)
@@ -158,7 +155,7 @@ class ComposeTestCase(TestCase):
         b = s.C(value.b)
         c = a << b
         self.assertIsInstance(c, s.Compose)
-        self.assertListEqual(c.stack, [a, b])
+        self.assertTupleEqual(c.stack, (a, b))
 
     def test_call(self):
         v = self.create_sentinels('arg res')
