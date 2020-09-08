@@ -282,15 +282,58 @@ class ItemGetterTestCase(TestCase):
 
 
 class PartialTestCase(TestCase):
-    pass
+
+    @patch('compose.partial')
+    def test_init(self, mock_partial):
+        v = self.create_sentinels('arg1 arg2 kwarg func')
+        mock_partial.return_value = v.func
+        p = s.P(v.func, v.arg1, v.arg2, value=v.kwarg)
+        self.assertIs(p.func, v.func)
+        mock_partial.assert_called_once_with(v.func, v.arg1, v.arg2, value=v.kwarg)
+
+    def test_partial(self):
+        v = [5, 1, 9, 7]
+        p = s.P(sorted, reverse=True)
+        self.assertListEqual(sorted(v), [1, 5, 7, 9])
+        self.assertListEqual(p(v), [9, 7, 5, 1])
 
 
 class MapComposeTestCase(TestCase):
-    pass
+
+    @patch('compose.partial')
+    def test_init(self, mock_partial):
+        func = self.sentinel['map']
+        mock_partial.return_value = func
+        p = s.Map(func)
+        self.assertIs(p.func, func)
+        mock_partial.assert_called_once_with(map, func)
+
+    def test_map(self):
+        v = [1, 0, 't', False, 0.0, '0', {}, {1}, ['value'], []]
+        m = s.Map(bool)
+        self.assertListEqual(
+            list(m(v)),
+            [True, False, True, False, False, True, False, True, True, False]
+        )
 
 
 class FilterComposeTestCase(TestCase):
-    pass
+
+    @patch('compose.partial')
+    def test_init(self, mock_partial):
+        func = self.sentinel['filter']
+        mock_partial.return_value = func
+        p = s.Filter(func)
+        self.assertIs(p.func, func)
+        mock_partial.assert_called_once_with(filter, func)
+
+    def test_filter(self):
+        v = [1, 0, 't', False, 0.0, '0', {}, {1}, ['value'], []]
+        f = s.Filter(bool)
+        self.assertListEqual(
+            list(f(v)),
+            [1, 't', '0', {1}, ['value']]
+        )
 
 
 class CommonTestCase(TestCase):
