@@ -3,7 +3,7 @@ from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
 
 
-__version__ = '0.1.5'
+__version__ = '0.1.7'
 
 
 def flip(func):
@@ -110,7 +110,7 @@ class IG(BaseGetter):
             # support dot-format, e.g. itemgetter('item.menu.id')
             names = arg.split('.')
             if len(names) > 1:
-                return reduce(lshift, map(cls, reversed(names)))
+                return Compose(*map(cls, reversed(names)))
 
         # itemgetter(0), itemgetter(1, 2), itemgetter('item', 'date')
         return super().__new__(cls)
