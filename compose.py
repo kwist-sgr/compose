@@ -50,7 +50,7 @@ class Compose(Shift):
         return cls(f, g)
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} [{','.join(map(repr, self.stack))}]>"
+        return f"<{self.__class__.__name__}: {','.join(map(repr, self.stack))}>"
 
     def __call__(self, arg):
         return reduce(flip(apply), reversed(self.stack), arg)
