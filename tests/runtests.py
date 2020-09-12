@@ -74,42 +74,77 @@ class HelpersTestCase(TestCase):
         func.assert_called_once_with(arg)
 
 
+class ShiftTestCase(TestCase):
+
+    def test_shift_childs(self):
+        self.assertTrue(issubclass(s.Compose, s.Shift))
+        self.assertTrue(issubclass(s.C, s.Shift))
+
+    @patch('compose.Compose.create')
+    def test_shift_shift(self, mock_create):
+        mock_create.return_value = shift = self.sentinel['shift']
+        a = type('A', (s.Shift,), {})()
+        b = type('B', (s.Shift,), {})()
+        self.assertIs(a << b, shift)
+        mock_create.assert_called_once_with(a, b)
+
+    def test_shift_other(self):
+        a = type('A', (s.Shift,), {})()
+        for x in ('v1', 1, {'v': 1}, [4], {7, 0}, object()):
+            with self.subTest(x.__class__.__name__):
+                with self.assertRaises(TypeError) as cm:
+                    a << x
+                self.assertEqual(
+                    str(cm.exception),
+                    f"unsupported operand type(s) for <<: 'A' and {x.__class__.__name__!r}"
+                )
+
+
 class CompositionTestCase(TestCase):
 
     def test_create_other_other(self):
-        v = self.create_sentinels('a b')
-        c = s.Compose.create(*v)
+        a, b = MagicMock(name='a', spec=s.C), MagicMock(name='b', spec=s.C)
+        c = s.Compose.create(a, b)
         self.assertIsInstance(c, s.Compose)
-        self.assertTupleEqual(c.stack, (v.a, v.b))
+        self.assertTupleEqual(c.stack, (a, b))
 
     def test_create_compose_other(self):
-        v = self.create_sentinels('a b x y')
-        z = s.Compose((v.a, v.b, v.y))
-        c = s.Compose.create(z, v.x)
+        v = {x: MagicMock(name=x, spec=s.C) for x in 'abxy'}
+        z = s.Compose(v['a'], v['b'], v['y'])
+        c = s.Compose.create(z, v['x'])
         self.assertIsInstance(c, s.Compose)
-        self.assertTupleEqual(c.stack, (v.a, v.b, v.y, v.x))
+        self.assertTupleEqual(c.stack, (v['a'], v['b'], v['y'], v['x']))
 
     def test_create_other_compose(self):
-        v = self.create_sentinels('a b x y')
-        z = s.Compose((v.a, v.b, v.y))
-        c = s.Compose.create(v.x, z)
+        v = {x: MagicMock(name=x, spec=s.C) for x in 'abxy'}
+        z = s.Compose(v['a'], v['b'], v['y'])
+        c = s.Compose.create(v['x'], z)
         self.assertIsInstance(c, s.Compose)
-        self.assertTupleEqual(c.stack, (v.x, v.a, v.b, v.y))
+        self.assertTupleEqual(c.stack, (v['x'], v['a'], v['b'], v['y']))
 
     @patch('compose.Compose.__lshift__')
     def test_lshift(self, mock_shift):
-        c = s.Compose.create(Mock(name='a'), Mock(name='b'))
+        a, b = MagicMock(name='a', spec=s.C), MagicMock(name='b', spec=s.C)
+        c = s.Compose.create(a, b)
         mock_shift.return_value = shift = self.sentinel['shift']
         other = self.sentinel['other']
         self.assertIs(c << other, shift)
         mock_shift.assert_called_once_with(other)
 
     def test_compose(self):
-        value = self.create_sentinels('x y z')
-        c = s.Compose.create(value.x, value.y)
-        new = c << value.z
+        v = {x: MagicMock(name=x, spec=s.C) for x in 'xyz'}
+        c = s.Compose.create(v['x'], v['y'])
+        new = c << v['z']
         self.assertIsInstance(new, s.Compose)
-        self.assertTupleEqual(new.stack, value)
+        self.assertTupleEqual(new.stack, tuple(v.values()))
+
+    def test_compose_init(self):
+        class Other:
+            pass
+
+        with self.assertRaises(ValueError) as cm:
+            s.Compose(s.Int, Other(), {})
+        self.assertEqual(str(cm.exception), "Object must be 'C' instance, not 'Other'")
 
     @patch('compose.reversed')
     @patch('compose.flip')
@@ -118,20 +153,21 @@ class CompositionTestCase(TestCase):
         mock_reduce.return_value = reduce = self.sentinel['reduce']
         mock_reversed.return_value = rev = self.sentinel['reversed']
         mock_flip.return_value = flip = self.sentinel['flip']
-        v = self.create_sentinels('a b arg')
-        c = s.Compose.create(v.a, v.b)
-        self.assertIs(c(v.arg), reduce)
+        a, b = MagicMock(name='a', spec=s.C), MagicMock(name='b', spec=s.C)
+        arg = self.sentinel['arg']
+        c = s.Compose(a, b)
+        self.assertIs(c(arg), reduce)
         mock_flip.assert_called_once_with(s.apply)
         mock_reversed.assert_called_once_with(c.stack)
-        mock_reduce.assert_called_once_with(flip, rev, v.arg)
+        mock_reduce.assert_called_once_with(flip, rev, arg)
 
     def test_call_result(self):
         value = self.create_sentinels('x y z arg')
-        x = Mock(name='x', return_value=value.x)
-        y = Mock(name='y', return_value=value.y)
-        z = Mock(name='z', return_value=value.z)
+        x = Mock(name='x', spec=s.C, return_value=value.x)
+        y = Mock(name='y', spec=s.C, return_value=value.y)
+        z = Mock(name='z', spec=s.C, return_value=value.z)
 
-        c = s.Compose((x, y, z))
+        c = s.Compose(x, y, z)
         # `x` called last
         self.assertIs(c(value.arg), value.x)
         z.assert_called_once_with(value.arg)

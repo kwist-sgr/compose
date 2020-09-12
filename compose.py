@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from typing import Tuple, Callable
 from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
@@ -25,24 +23,31 @@ class Shift:
 
     def __lshift__(self, other):
         """ << operator """
-        return Compose.create(self, other)
+        if isinstance(other, Shift):
+            return Compose.create(self, other)
+        return NotImplemented
 
 
-@dataclass(frozen=True)
 class Compose(Shift):
     """
     Container for function compositions
     """
-    stack: Tuple[Callable]
+
+    def __init__(self, *items):
+        for x in items:
+            if not isinstance(x, C):
+                raise ValueError(f"Object must be 'C' instance, not {x.__class__.__name__!r}")
+        self.stack = tuple(items)
 
     @classmethod
     def create(cls, f, g):
-        stack = tuple(f.stack) if isinstance(f, cls) else (f,)
+        if isinstance(f, cls):
+            if isinstance(g, cls):
+                return cls(*f.stack, *g.stack)
+            return cls(*f.stack, g)
         if isinstance(g, cls):
-            stack += g.stack
-        else:
-            stack += (g,)
-        return cls(stack)
+            return cls(f, *g.stack)
+        return cls(f, g)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} [{','.join(map(repr, self.stack))}]>"
