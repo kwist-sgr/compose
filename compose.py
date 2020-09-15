@@ -32,6 +32,7 @@ class Compose(Shift):
     """
     Container for function compositions
     """
+    __slots__ = ('stack',)
 
     def __init__(self, *items):
         for x in items:
@@ -60,6 +61,8 @@ class C(Shift):
     """
     Function wrapper for compositions
     """
+    __slots__ = ('func',)
+
     def __init__(self, func):
         self.func = func
 
@@ -78,6 +81,8 @@ class BaseGetter(C):
     """
     Base class for getters
     """
+    __slots__ = ('func', 'args',)
+
     def __init__(self, *args):
         super().__init__(self.getter(*args))
         self.args = args
@@ -104,7 +109,7 @@ class IG(BaseGetter):
         try:
             arg, *others = args
         except ValueError:
-            raise TypeError('itemgetter expected 1 argument, got 0')
+            raise TypeError(f'{cls.getter.__name__} expected 1 argument, got 0')
 
         if isinstance(arg, str) and not others:
             # support dot-format, e.g. itemgetter('item.menu.id')
