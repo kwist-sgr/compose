@@ -1,32 +1,43 @@
-from typing import Tuple, Callable
+from typing import Callable, Any, TypeVar, Sequence, Union, Mapping
 from reprlib import recursive_repr
 from functools import partial, wraps, reduce
-from operator import itemgetter, attrgetter, lshift
+from operator import itemgetter, attrgetter
 
 
 __version__ = '0.1.7'
 
 
-def flip(func):
+# Main reduction and restriction: only functions with one argument are supported.
+ShiftT = TypeVar('ShiftT', bound='Shift')
+ComposeT = TypeVar('ComposeT', bound='Compose')
+CT = TypeVar('CT', bound='C')
+
+CArg = Any
+CType = Callable[[CArg], Any]
+
+Pipeline = Union[CType, ComposeT, CT]
+
+
+def flip(func: CType) -> CType:
 
     @wraps(func)
-    def wrapper(a, b):
+    def wrapper(a: CArg, b: CArg):
         return func(b, a)
 
     return wrapper
 
 
-def apply(func, arg):
+def apply(func: CType, arg: CArg):
     return func(arg)
 
 
-def _name(obj):
+def _name(obj: Any) -> str:
     return obj.__class__.__name__
 
 
 class Shift:
 
-    def __lshift__(self, other):
+    def __lshift__(self, other: ShiftT) -> ComposeT:
         """ << operator """
         if isinstance(other, Shift):
             return Compose.pipeline(self, other)
@@ -39,24 +50,24 @@ class Compose(Shift):
     """
     __slots__ = ('stack',)
 
-    def __init__(self, *items):
+    def __init__(self, *items: Sequence[CT]) -> None:
         for x in items:
             if not isinstance(x, C):
                 raise ValueError(f"Object must be 'C' instance, not {_name(x)!r}")
         self.stack = tuple(items)
 
     @classmethod
-    def pipeline(cls, f, g):
+    def pipeline(cls, f: Pipeline, g: Pipeline) -> ComposeT:
         g_compose = isinstance(g, cls)
         if isinstance(f, cls):
             return cls(*f.stack, *g.stack) if g_compose else cls(*f.stack, g)
         return cls(f, *g.stack) if g_compose else cls(f, g)
 
     @recursive_repr()
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{_name(self)}: {','.join(map(repr, self.stack))}>"
 
-    def __call__(self, arg):
+    def __call__(self, arg: CArg) -> Any:
         return reduce(flip(apply), reversed(self.stack), arg)
 
 
@@ -66,17 +77,17 @@ class C(Shift):
     """
     __slots__ = ('func',)
 
-    def __init__(self, func):
+    def __init__(self, func: CType) -> None:
         self.func = func
 
     @property
-    def __name__(self):
+    def __name__(self) -> str:
         return self.func.__name__
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__name__
 
-    def __call__(self, arg):
+    def __call__(self, arg: CArg) -> Any:
         return self.func(arg)
 
 
@@ -86,12 +97,12 @@ class BaseGetter(C):
     """
     __slots__ = ('func', 'args',)
 
-    def __init__(self, *args):
+    def __init__(self, *args: Sequence[Any]) -> None:
         super().__init__(self.getter(*args))
         self.args = args
 
     @property
-    def __name__(self):
+    def __name__(self) -> str:
         return f"{_name(self)}({','.join(map(str, self.args))})"
 
 
@@ -108,7 +119,7 @@ class IG(BaseGetter):
     """
     getter = itemgetter
 
-    def __new__(cls, *args):
+    def __new__(cls, *args: Sequence[Any]) -> None:
         try:
             arg, *others = args
         except ValueError:
@@ -129,11 +140,11 @@ class P(C):
     Partial function
     """
 
-    def __init__(self, func, *args, **kwargs):
+    def __init__(self, func: Callable, *args: Sequence[Any], **kwargs: Mapping[Any]) -> None:
         super().__init__(partial(func, *args, **kwargs))
 
     @property
-    def __name__(self):
+    def __name__(self) -> str:
         return f"partial({self.func.func.__name__})"
 
 
@@ -143,11 +154,11 @@ class IterCompose(P):
     """
     f = None
 
-    def __init__(self, func):
+    def __init__(self, func: Callable) -> None:
         super().__init__(self.f, func)
 
     @property
-    def __name__(self):
+    def __name__(self) -> str:
         return f"{self.f.__name__}({self.func.args[0].__name__})"
 
 
