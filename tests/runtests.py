@@ -80,13 +80,13 @@ class ShiftTestCase(TestCase):
         self.assertTrue(issubclass(s.Compose, s.Shift))
         self.assertTrue(issubclass(s.C, s.Shift))
 
-    @patch('compose.Compose.create')
-    def test_shift_shift(self, mock_create):
-        mock_create.return_value = shift = self.sentinel['shift']
+    @patch('compose.Compose.pipeline')
+    def test_shift_shift(self, mock_pipeline):
+        mock_pipeline.return_value = shift = self.sentinel['shift']
         a = type('A', (s.Shift,), {})()
         b = type('B', (s.Shift,), {})()
         self.assertIs(a << b, shift)
-        mock_create.assert_called_once_with(a, b)
+        mock_pipeline.assert_called_once_with(a, b)
 
     def test_shift_other(self):
         a = type('A', (s.Shift,), {})()
@@ -104,28 +104,28 @@ class CompositionTestCase(TestCase):
 
     def test_create_other_other(self):
         a, b = MagicMock(name='a', spec=s.C), MagicMock(name='b', spec=s.C)
-        c = s.Compose.create(a, b)
+        c = s.Compose.pipeline(a, b)
         self.assertIsInstance(c, s.Compose)
         self.assertTupleEqual(c.stack, (a, b))
 
     def test_create_compose_other(self):
         v = {x: MagicMock(name=x, spec=s.C) for x in 'abxy'}
         z = s.Compose(v['a'], v['b'], v['y'])
-        c = s.Compose.create(z, v['x'])
+        c = s.Compose.pipeline(z, v['x'])
         self.assertIsInstance(c, s.Compose)
         self.assertTupleEqual(c.stack, (v['a'], v['b'], v['y'], v['x']))
 
     def test_create_other_compose(self):
         v = {x: MagicMock(name=x, spec=s.C) for x in 'abxy'}
         z = s.Compose(v['a'], v['b'], v['y'])
-        c = s.Compose.create(v['x'], z)
+        c = s.Compose.pipeline(v['x'], z)
         self.assertIsInstance(c, s.Compose)
         self.assertTupleEqual(c.stack, (v['x'], v['a'], v['b'], v['y']))
 
     @patch('compose.Compose.__lshift__')
     def test_lshift(self, mock_shift):
         a, b = MagicMock(name='a', spec=s.C), MagicMock(name='b', spec=s.C)
-        c = s.Compose.create(a, b)
+        c = s.Compose.pipeline(a, b)
         mock_shift.return_value = shift = self.sentinel['shift']
         other = self.sentinel['other']
         self.assertIs(c << other, shift)
@@ -133,7 +133,7 @@ class CompositionTestCase(TestCase):
 
     def test_compose(self):
         v = {x: MagicMock(name=x, spec=s.C) for x in 'xyz'}
-        c = s.Compose.create(v['x'], v['y'])
+        c = s.Compose.pipeline(v['x'], v['y'])
         new = c << v['z']
         self.assertIsInstance(new, s.Compose)
         self.assertTupleEqual(new.stack, tuple(v.values()))

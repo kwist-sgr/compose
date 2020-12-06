@@ -1,4 +1,5 @@
 from typing import Tuple, Callable
+from reprlib import recursive_repr
 from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter, lshift
 
@@ -19,12 +20,16 @@ def apply(func, arg):
     return func(arg)
 
 
+def _name(obj):
+    return obj.__class__.__name__
+
+
 class Shift:
 
     def __lshift__(self, other):
         """ << operator """
         if isinstance(other, Shift):
-            return Compose.create(self, other)
+            return Compose.pipeline(self, other)
         return NotImplemented
 
 
@@ -37,21 +42,19 @@ class Compose(Shift):
     def __init__(self, *items):
         for x in items:
             if not isinstance(x, C):
-                raise ValueError(f"Object must be 'C' instance, not {x.__class__.__name__!r}")
+                raise ValueError(f"Object must be 'C' instance, not {_name(x)!r}")
         self.stack = tuple(items)
 
     @classmethod
-    def create(cls, f, g):
+    def pipeline(cls, f, g):
+        g_compose = isinstance(g, cls)
         if isinstance(f, cls):
-            if isinstance(g, cls):
-                return cls(*f.stack, *g.stack)
-            return cls(*f.stack, g)
-        if isinstance(g, cls):
-            return cls(f, *g.stack)
-        return cls(f, g)
+            return cls(*f.stack, *g.stack) if g_compose else cls(*f.stack, g)
+        return cls(f, *g.stack) if g_compose else cls(f, g)
 
+    @recursive_repr()
     def __repr__(self):
-        return f"<{self.__class__.__name__}: {','.join(map(repr, self.stack))}>"
+        return f"<{_name(self)}: {','.join(map(repr, self.stack))}>"
 
     def __call__(self, arg):
         return reduce(flip(apply), reversed(self.stack), arg)
@@ -89,7 +92,7 @@ class BaseGetter(C):
 
     @property
     def __name__(self):
-        return f"{self.__class__.__name__}({','.join(map(str, self.args))})"
+        return f"{_name(self)}({','.join(map(str, self.args))})"
 
 
 class AG(BaseGetter):
