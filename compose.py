@@ -140,7 +140,7 @@ class P(C):
     Partial function
     """
 
-    def __init__(self, func: Callable, *args: Sequence[Any], **kwargs: Mapping[Any]) -> None:
+    def __init__(self, func: Callable, *args: Sequence[Any], **kwargs: Mapping[str, Any]) -> None:
         super().__init__(partial(func, *args, **kwargs))
 
     @property
