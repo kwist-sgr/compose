@@ -1,8 +1,8 @@
 import re
-import uuid
 import pytest
 import compose as cp
 
+from uuid import uuid4
 from unittest.mock import patch, MagicMock, Mock
 
 from .base import sentinel
@@ -52,7 +52,7 @@ def test_compose():
 def test_compose_callable():
 
     class Callable:
-        _repr = str(uuid.uuid4())
+        _repr = str(uuid4())
 
         def __repr__(self):
             return self._repr
@@ -68,7 +68,7 @@ def test_compose_callable():
 def test_compose_non_callable():
 
     class NotCallable:
-        _repr = str(uuid.uuid4())
+        _repr = str(uuid4())
 
         def __repr__(self):
             return self._repr
