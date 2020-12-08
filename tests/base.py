@@ -26,7 +26,7 @@ class _Sentinel:
 
     def batch(self, names):
         Row = namedtuple('Row', names)
-        return Row._make(self.sentinel[f'value_{f}'] for f in Row._fields)
+        return Row._make(self[f'value_{f}'] for f in Row._fields)
 
 
 sentinel = _Sentinel()

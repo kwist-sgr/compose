@@ -18,16 +18,16 @@ CType = Callable[[CArg], Any]
 Pipeline = Union[CType, ComposeT, CT]
 
 
-def flip(func: CType) -> CType:
+def flip(func: CType, /) -> CType:
 
     @wraps(func)
-    def wrapper(a: CArg, b: CArg):
+    def wrapper(a: CArg, b: CArg, /):
         return func(b, a)
 
     return wrapper
 
 
-def apply(func: CType, arg: CArg):
+def apply(func: CType, arg: CArg, /):
     return func(arg)
 
 
@@ -52,12 +52,12 @@ class Compose(Shift):
 
     def __init__(self, *items: Sequence[CT]) -> None:
         for x in items:
-            if not isinstance(x, C):
-                raise ValueError(f"Object must be 'C' instance, not {_name(x)!r}")
+            if not callable(x):
+                raise ValueError(f"All passed items must be callable, got {x!r} instead")
         self.stack = tuple(items)
 
     @classmethod
-    def pipeline(cls, f: Pipeline, g: Pipeline) -> ComposeT:
+    def pipeline(cls, f: Pipeline, g: Pipeline, /) -> ComposeT:
         g_compose = isinstance(g, cls)
         if isinstance(f, cls):
             return cls(*f.stack, *g.stack) if g_compose else cls(*f.stack, g)
@@ -67,7 +67,7 @@ class Compose(Shift):
     def __repr__(self) -> str:
         return f"<{_name(self)}: {','.join(map(repr, self.stack))}>"
 
-    def __call__(self, arg: CArg) -> Any:
+    def __call__(self, arg: CArg, /) -> Any:
         return reduce(flip(apply), reversed(self.stack), arg)
 
 
@@ -87,7 +87,7 @@ class C(Shift):
     def __repr__(self) -> str:
         return self.__name__
 
-    def __call__(self, arg: CArg) -> Any:
+    def __call__(self, arg: CArg, /) -> Any:
         return self.func(arg)
 
 

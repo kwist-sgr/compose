@@ -24,9 +24,7 @@ def test_shift_shift(mock_pipeline):
 def test_shift_other(subtests):
     a = type('A', (cp.Shift,), {})()
     for x in ('v1', 1, {'v': 1}, [4], {7, 0}, object()):
+        message = f"unsupported operand type(s) for <<: 'A' and {x.__class__.__name__!r}"
         with subtests.test(x.__class__.__name__):
-            with pytest.raises(
-                TypeError,
-                match=re.escape(f"unsupported operand type(s) for <<: 'A' and {x.__class__.__name__!r}")
-            ):
+            with pytest.raises(TypeError, match=re.escape(message)):
                 a << x
