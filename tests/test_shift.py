@@ -21,7 +21,7 @@ def test_shift_shift(mock_pipeline):
     mock_pipeline.assert_called_once_with(a, b)
 
 
-def test_shift_other(subtests):
+def test_shift_unsupported(subtests):
     a = type('A', (cp.Shift,), {})()
     for x in ('v1', 1, {'v': 1}, [4], {7, 0}, object()):
         message = f"unsupported operand type(s) for <<: 'A' and {x.__class__.__name__!r}"

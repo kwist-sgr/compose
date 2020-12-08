@@ -1,7 +1,6 @@
-from typing import Callable, Any, TypeVar, Sequence, Union, Mapping
-from reprlib import recursive_repr
-from functools import partial, wraps, reduce
 from operator import itemgetter, attrgetter
+from functools import partial, wraps, reduce
+from typing import Callable, Any, TypeVar, Sequence, Union, Mapping
 
 
 __version__ = '0.1.7'
@@ -63,9 +62,13 @@ class Compose(Shift):
             return cls(*f.stack, *g.stack) if g_compose else cls(*f.stack, g)
         return cls(f, *g.stack) if g_compose else cls(f, g)
 
-    @recursive_repr()
     def __repr__(self) -> str:
         return f"<{_name(self)}: {','.join(map(repr, self.stack))}>"
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.stack == other.stack
+        return NotImplemented
 
     def __call__(self, arg: CArg, /) -> Any:
         return reduce(flip(apply), reversed(self.stack), arg)
@@ -78,6 +81,8 @@ class C(Shift):
     __slots__ = ('func',)
 
     def __init__(self, func: CType) -> None:
+        if not callable(func):
+            raise ValueError(f"{func!r} must be callable")
         self.func = func
 
     @property
@@ -86,6 +91,11 @@ class C(Shift):
 
     def __repr__(self) -> str:
         return self.__name__
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.func == other.func
+        return NotImplemented
 
     def __call__(self, arg: CArg, /) -> Any:
         return self.func(arg)

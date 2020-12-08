@@ -1,4 +1,5 @@
 import re
+import pickle
 import pytest
 import compose as cp
 
@@ -107,3 +108,33 @@ def test_call_result():
     z.assert_called_once_with(value.arg)
     y.assert_called_once_with(value.z)
     x.assert_called_once_with(value.y)
+
+
+def test_eq():
+    a = cp.Compose()
+    b = cp.Compose()
+    a.stack = MagicMock(name='stack.a')
+    b.stack = MagicMock(name='stack.b')
+
+    a.stack.__eq__.return_value = True
+    assert a == b
+    a.stack.__eq__.assert_called_once_with(b.stack)
+
+    a.stack.reset_mock()
+    a.stack.__eq__.return_value = False
+    assert a != b
+    a.stack.__eq__.assert_called_once_with(b.stack)
+
+
+def test_eq_unsupported(subtests):
+    f = cp.C(float)
+    for x in ([1, 2], {1: 2}, object(), 12, '67', {12}):
+        with subtests.test(repr(x)):
+            assert f.__eq__(x) is NotImplemented
+
+
+def test_pickle(subtests):
+    c = cp.Compose(int, float, round)
+    for protocol in range(2, pickle.HIGHEST_PROTOCOL):
+        with subtests.test(f"protocol={protocol}"):
+            assert c == pickle.loads(pickle.dumps(c, protocol))

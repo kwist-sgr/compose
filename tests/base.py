@@ -1,5 +1,7 @@
 from collections import namedtuple
 
+from unittest.mock import MagicMock
+
 
 class _SentinelObject:
     "A unique, named, sentinel object."
@@ -30,3 +32,10 @@ class _Sentinel:
 
 
 sentinel = _Sentinel()
+
+
+class NamedMock(MagicMock):
+
+    @property
+    def __name__(self):
+        return self._extract_mock_name()
