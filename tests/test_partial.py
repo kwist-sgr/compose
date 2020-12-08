@@ -7,9 +7,8 @@ from .base import sentinel, NamedMock
 
 @patch('compose.partial')
 def test_init(mock_partial):
-    func = NamedMock(name='func')
     v = sentinel.batch('arg1 arg2 kwarg')
-    mock_partial.return_value = func
+    mock_partial.return_value = func = NamedMock(name='func')
     p = cp.P(func, v.arg1, v.arg2, value=v.kwarg)
     assert p.func is func
     mock_partial.assert_called_once_with(func, v.arg1, v.arg2, value=v.kwarg)
