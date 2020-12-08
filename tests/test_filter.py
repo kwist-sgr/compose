@@ -8,7 +8,6 @@ from .base import NamedMock
 @patch('compose.partial')
 def test_init(mock_partial):
     mock_partial.return_value = func = NamedMock(name='filter')
-    mock_partial.return_value = func
     p = cp.Filter(func)
     assert p.func is func
     mock_partial.assert_called_once_with(filter, func)
