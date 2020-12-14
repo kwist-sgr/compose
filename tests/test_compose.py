@@ -50,6 +50,11 @@ def test_compose():
     assert new.stack == tuple(v.values())
 
 
+def test_create_empty():
+    with pytest.raises(ValueError, match='Can not create empty Compose object'):
+        cp.Compose()
+
+
 def test_compose_callable():
 
     class Callable:
@@ -111,8 +116,8 @@ def test_call_result():
 
 
 def test_eq():
-    a = cp.Compose()
-    b = cp.Compose()
+    a = cp.Compose(int)
+    b = cp.Compose(str)
     a.stack = MagicMock(name='stack.a')
     b.stack = MagicMock(name='stack.b')
 

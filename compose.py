@@ -50,6 +50,8 @@ class Compose(Shift):
     __slots__ = ('stack',)
 
     def __init__(self, *items: Sequence[CT]) -> None:
+        if not items:
+            raise ValueError(f"Can not create empty {_name(self)} object")
         for x in items:
             if not callable(x):
                 raise ValueError(f"All passed items must be callable, got {x!r} instead")
