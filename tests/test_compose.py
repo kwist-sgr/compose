@@ -101,6 +101,11 @@ def test_call(mock_reduce, mock_flip, mock_reversed):
     mock_reduce.assert_called_once_with(flip, rev, arg)
 
 
+def test_call_with_signle_func():
+    c = cp.Compose(cp.Int)
+    assert c('124') == 124
+
+
 def test_call_result():
     value = sentinel.batch('x y z arg')
     x = Mock(name='x', spec=cp.C, return_value=value.x)
