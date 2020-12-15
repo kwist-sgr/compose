@@ -3,7 +3,7 @@ from functools import partial, wraps, reduce
 from typing import Callable, Any, TypeVar, Sequence, Union, Mapping
 
 
-__version__ = '0.1.7'
+__version__ = '0.3.2'
 
 
 # Main reduction and restriction: only functions with one argument are supported.
@@ -67,7 +67,6 @@ class Compose(Shift):
     """
     Container for function compositions
     """
-    __slots__ = ('stack',)
 
     def __init__(self, *items: Sequence[CT]) -> None:
         if not items:
@@ -100,7 +99,6 @@ class C(Shift):
     """
     Function wrapper for compositions
     """
-    __slots__ = ('func',)
 
     def __init__(self, func: CType) -> None:
         if not callable(func):
@@ -127,7 +125,6 @@ class BaseGetter(C):
     """
     Base class for getters
     """
-    __slots__ = ('func', 'args',)
 
     def __init__(self, *args: Sequence[Any]) -> None:
         super().__init__(self.getter(*args))
