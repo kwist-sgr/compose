@@ -28,10 +28,14 @@ class ComposeError(Exception):
         self.arg = arg
 
     def __str__(self) -> str:
-        return f"{self.func!r}({self.arg!r}) caused error: {self.__cause__}"
+        return f"{self.func!r}({self.arg!r}) caused error: {self.origin}"
 
     def __repr__(self) -> str:
         return f"{_name(self)}(func={self.func!r}, arg={self.arg!r})"
+
+    @property
+    def origin(self):
+        return self.__cause__
 
 
 def flip(func: CType, /) -> CType:

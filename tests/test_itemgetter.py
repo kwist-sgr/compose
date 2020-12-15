@@ -57,7 +57,7 @@ def test_key_error_deep():
     with pytest.raises(cp.ComposeError) as excinfo:
         f({'a': {'b': {}}})
 
-    assert str(excinfo.value.__cause__) == f"'{key}'"
+    assert str(excinfo.value.origin) == f"'{key}'"
 
 
 def test_multi_index():
