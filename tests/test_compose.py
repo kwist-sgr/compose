@@ -96,7 +96,7 @@ def test_call(mock_reduce, mock_flip, mock_reversed):
     arg = sentinel['arg']
     c = cp.Compose(a, b)
     assert c(arg) is reduce_
-    mock_flip.assert_called_once_with(cp.apply)
+    mock_flip.assert_called_once_with(cp.safe_apply)
     mock_reversed.assert_called_once_with(c.stack)
     mock_reduce.assert_called_once_with(flip, rev, arg)
 

@@ -54,8 +54,10 @@ def test_key_error_multi():
 def test_key_error_deep():
     key = str(uuid4())
     f = cp.IG(f"a.b.{key}")
-    with pytest.raises(KeyError, match=re.escape(f"'{key}'")):
+    with pytest.raises(cp.ComposeError) as excinfo:
         f({'a': {'b': {}}})
+
+    assert str(excinfo.value.__cause__) == f"'{key}'"
 
 
 def test_multi_index():

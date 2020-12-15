@@ -17,6 +17,23 @@ CType = Callable[[CArg], Any]
 Pipeline = Union[CType, ComposeT, CT]
 
 
+def _name(obj: Any) -> str:
+    return obj.__class__.__name__
+
+
+class ComposeError(Exception):
+
+    def __init__(self, func: CType, arg: CArg, /) -> None:
+        self.func = func
+        self.arg = arg
+
+    def __str__(self) -> str:
+        return f"{self.func!r}({self.arg!r}) caused error: {self.__cause__}"
+
+    def __repr__(self) -> str:
+        return f"{_name(self)}(func={self.func!r}, arg={self.arg!r})"
+
+
 def flip(func: CType, /) -> CType:
 
     @wraps(func)
@@ -26,12 +43,11 @@ def flip(func: CType, /) -> CType:
     return wrapper
 
 
-def apply(func: CType, arg: CArg, /):
-    return func(arg)
-
-
-def _name(obj: Any) -> str:
-    return obj.__class__.__name__
+def safe_apply(func: CType, arg: CArg, /) -> Any:
+    try:
+        return func(arg)
+    except Exception as exc:
+        raise ComposeError(func, arg) from exc
 
 
 class Shift:
@@ -67,13 +83,13 @@ class Compose(Shift):
     def __repr__(self) -> str:
         return f"<{_name(self)}: {','.join(map(repr, self.stack))}>"
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
             return self.stack == other.stack
         return NotImplemented
 
     def __call__(self, arg: CArg, /) -> Any:
-        return reduce(flip(apply), reversed(self.stack), arg)
+        return reduce(flip(safe_apply), reversed(self.stack), arg)
 
 
 class C(Shift):
@@ -94,7 +110,7 @@ class C(Shift):
     def __repr__(self) -> str:
         return self.__name__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
             return self.func == other.func
         return NotImplemented
