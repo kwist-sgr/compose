@@ -3,7 +3,6 @@ import pytest
 import compose as cp
 
 from uuid import uuid4
-from unittest.mock import MagicMock
 
 from .base import sentinel
 

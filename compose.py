@@ -3,7 +3,7 @@ from functools import partial, wraps, reduce
 from typing import Callable, Any, TypeVar, Sequence, Union, Mapping
 
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 
 # Main reduction and restriction: only functions with one argument are supported.
@@ -23,7 +23,7 @@ def _name(obj: Any) -> str:
 
 class ComposeError(Exception):
 
-    def __init__(self, func: CType, arg: CArg, /) -> None:
+    def __init__(self, func: CType, arg: CArg) -> None:
         self.func = func
         self.arg = arg
 
@@ -38,16 +38,16 @@ class ComposeError(Exception):
         return self.__cause__
 
 
-def flip(func: CType, /) -> CType:
+def flip(func: CType) -> CType:
 
     @wraps(func)
-    def wrapper(a: CArg, b: CArg, /):
+    def wrapper(a: CArg, b: CArg):
         return func(b, a)
 
     return wrapper
 
 
-def safe_apply(func: CType, arg: CArg, /) -> Any:
+def safe_apply(func: CType, arg: CArg) -> Any:
     try:
         return func(arg)
     except Exception as exc:
@@ -77,7 +77,7 @@ class Compose(Shift):
         self.stack = tuple(items)
 
     @classmethod
-    def pipeline(cls, f: Pipeline, g: Pipeline, /) -> ComposeT:
+    def pipeline(cls, f: Pipeline, g: Pipeline) -> ComposeT:
         g_compose = isinstance(g, cls)
         if isinstance(f, cls):
             return cls(*f.stack, *g.stack) if g_compose else cls(*f.stack, g)
@@ -91,7 +91,7 @@ class Compose(Shift):
             return self.stack == other.stack
         return NotImplemented
 
-    def __call__(self, arg: CArg, /) -> Any:
+    def __call__(self, arg: CArg) -> Any:
         return reduce(flip(safe_apply), reversed(self.stack), arg)
 
 
@@ -117,7 +117,7 @@ class C(Shift):
             return self.func == other.func
         return NotImplemented
 
-    def __call__(self, arg: CArg, /) -> Any:
+    def __call__(self, arg: CArg) -> Any:
         return self.func(arg)
 
 
