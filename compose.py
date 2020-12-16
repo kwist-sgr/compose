@@ -3,7 +3,7 @@ from functools import partial, wraps, reduce
 from typing import Callable, Any, TypeVar, Sequence, Union, Mapping
 
 
-__version__ = '0.3.3'
+__version__ = '0.3.4'
 
 
 # Main reduction and restriction: only functions with one argument are supported.
@@ -70,7 +70,7 @@ class Compose(Shift):
 
     def __init__(self, *items: Sequence[CT]) -> None:
         if not items:
-            raise ValueError(f"Can not create empty {_name(self)} object")
+            raise TypeError(f"{_name(self)} expected at least 1 argument, got 0")
         for x in items:
             if not callable(x):
                 raise ValueError(f"All passed items must be callable, got {x!r} instead")

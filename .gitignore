@@ -2,3 +2,4 @@
 __pycache__
 .tox/
 .dir-locals.el
+.coverage

@@ -51,7 +51,7 @@ def test_compose():
 
 
 def test_create_empty():
-    with pytest.raises(ValueError, match='Can not create empty Compose object'):
+    with pytest.raises(TypeError, match='Compose expected at least 1 argument, got 0'):
         cp.Compose()
 
 
@@ -99,6 +99,12 @@ def test_call(mock_reduce, mock_flip, mock_reversed):
     mock_flip.assert_called_once_with(cp.safe_apply)
     mock_reversed.assert_called_once_with(c.stack)
     mock_reduce.assert_called_once_with(flip, rev, arg)
+
+
+def test_compose_call():
+    f = cp.Compose(cp.Sum, cp.Map(int), cp.Str)
+    assert repr(f) == "<Compose: sum,map(int),str>"
+    assert f(763) == 16
 
 
 def test_call_with_signle_func():

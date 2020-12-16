@@ -7,8 +7,8 @@ from .base import sentinel
 
 
 def test_arg_required():
-    # python 3.7: attrgetter expected 1 arguments, got 0
-    # python 3.8+: attrgetter expected 1 argument, got 0
+    # python 3.7  : attrgetter expected 1 arguments, got 0
+    # python 3.8+ : attrgetter expected 1 argument, got 0
     with pytest.raises(TypeError, match='attrgetter expected 1 arguments?, got 0'):
         cp.AG()
 
