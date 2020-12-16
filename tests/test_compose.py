@@ -143,7 +143,7 @@ def test_eq():
 
 
 def test_eq_unsupported(subtests):
-    f = cp.C(float)
+    f = cp.Compose(float)
     for x in ([1, 2], {1: 2}, object(), 12, '67', {12}):
         with subtests.test(repr(x)):
             assert f.__eq__(x) is NotImplemented

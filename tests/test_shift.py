@@ -2,7 +2,7 @@ import re
 import pytest
 import compose as cp
 
-from unittest.mock import patch
+from unittest.mock import patch, NonCallableMock
 
 from .base import sentinel
 
@@ -28,3 +28,9 @@ def test_shift_unsupported(subtests):
         with subtests.test(x.__class__.__name__):
             with pytest.raises(TypeError, match=re.escape(message)):
                 a << x
+
+
+def test_callable_required():
+    func = NonCallableMock(name='func')
+    with pytest.raises(ValueError, match=re.escape(f'{func!r} must be callable')):
+        cp.C(func)
