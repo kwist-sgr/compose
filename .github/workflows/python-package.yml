@@ -13,6 +13,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      USING_COVERAGE: "3.7,3.8,3.9"
+
     strategy:
       matrix:
         python-version: ['3.7', '3.8', '3.9']
@@ -25,7 +28,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        set -xe
+        python -VV
         python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
         python -m pip install -r tests/requirements.txt
     - name: Lint with flake8
       run: |
@@ -33,6 +39,29 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
+
+#    - name: Test with pytest
+#      run: |
+#        pytest
+
+    - name: "Run tox targets for ${{ matrix.python-version }}"
+      run: "python -m tox"
+
+    # We always use a modern Python version for combining coverage to prevent
+    # parsing errors in older versions for modern code.
+    - uses: "actions/setup-python@v2"
+      with:
+        python-version: "3.9"
+
+    - name: "Combine coverage"
       run: |
-        pytest
+        set -xe
+        python -m pip install coverage[toml]
+        python -m coverage combine
+        python -m coverage xml
+      if: "contains(env.USING_COVERAGE, matrix.python-version)"
+    - name: "Upload coverage to Codecov"
+      if: "contains(env.USING_COVERAGE, matrix.python-version)"
+      uses: codecov/codecov-action@v1.0.15
+      with:
+          fail_ci_if_error: true
