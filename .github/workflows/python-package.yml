@@ -13,8 +13,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    env:
-      USING_COVERAGE: "3.7,3.8,3.9"
 
     strategy:
       matrix:
@@ -31,7 +29,6 @@ jobs:
         set -xe
         python -VV
         python -m pip install --upgrade pip setuptools wheel
-        python -m pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
         python -m pip install -r tests/requirements.txt
     - name: Lint with flake8
       run: |
@@ -42,26 +39,4 @@ jobs:
 
    - name: Test with pytest
      run: |
-       pytest
-
-    # - name: "Run tox targets for ${{ matrix.python-version }}"
-    #   run: "python -m tox"
-
-    # # We always use a modern Python version for combining coverage to prevent
-    # # parsing errors in older versions for modern code.
-    # - uses: "actions/setup-python@v2"
-    #   with:
-    #     python-version: "3.9"
-
-    # - name: "Combine coverage"
-    #   run: |
-    #     set -xe
-    #     python -m pip install coverage[toml]
-    #     python -m coverage combine
-    #     python -m coverage xml
-    #   if: "contains(env.USING_COVERAGE, matrix.python-version)"
-    # - name: "Upload coverage to Codecov"
-    #   if: "contains(env.USING_COVERAGE, matrix.python-version)"
-    #   uses: codecov/codecov-action@v1.0.15
-    #   with:
-    #       fail_ci_if_error: true
+       python -m pytest
