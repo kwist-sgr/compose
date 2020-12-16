@@ -55,6 +55,6 @@ def test_eq_unsupported(subtests):
 
 def test_pickle(subtests):
     f = cp.C(int)
-    for protocol in range(2, pickle.HIGHEST_PROTOCOL):
+    for protocol in range(pickle.HIGHEST_PROTOCOL):
         with subtests.test(f"protocol={protocol}"):
             assert f == pickle.loads(pickle.dumps(f, protocol))
