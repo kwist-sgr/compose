@@ -40,28 +40,28 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-#    - name: Test with pytest
-#      run: |
-#        pytest
+   - name: Test with pytest
+     run: |
+       pytest
 
-    - name: "Run tox targets for ${{ matrix.python-version }}"
-      run: "python -m tox"
+    # - name: "Run tox targets for ${{ matrix.python-version }}"
+    #   run: "python -m tox"
 
-    # We always use a modern Python version for combining coverage to prevent
-    # parsing errors in older versions for modern code.
-    - uses: "actions/setup-python@v2"
-      with:
-        python-version: "3.9"
+    # # We always use a modern Python version for combining coverage to prevent
+    # # parsing errors in older versions for modern code.
+    # - uses: "actions/setup-python@v2"
+    #   with:
+    #     python-version: "3.9"
 
-    - name: "Combine coverage"
-      run: |
-        set -xe
-        python -m pip install coverage[toml]
-        python -m coverage combine
-        python -m coverage xml
-      if: "contains(env.USING_COVERAGE, matrix.python-version)"
-    - name: "Upload coverage to Codecov"
-      if: "contains(env.USING_COVERAGE, matrix.python-version)"
-      uses: codecov/codecov-action@v1.0.15
-      with:
-          fail_ci_if_error: true
+    # - name: "Combine coverage"
+    #   run: |
+    #     set -xe
+    #     python -m pip install coverage[toml]
+    #     python -m coverage combine
+    #     python -m coverage xml
+    #   if: "contains(env.USING_COVERAGE, matrix.python-version)"
+    # - name: "Upload coverage to Codecov"
+    #   if: "contains(env.USING_COVERAGE, matrix.python-version)"
+    #   uses: codecov/codecov-action@v1.0.15
+    #   with:
+    #       fail_ci_if_error: true
